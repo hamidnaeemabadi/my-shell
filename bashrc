@@ -129,6 +129,10 @@ if ! shopt -oq posix; then
     fi
 fi
 
+# My Editor
+export VISUAL=vim
+export EDITOR=vim
+
 # Bash autocompletion
 source /etc/profile.d/bash_completion.sh
 
