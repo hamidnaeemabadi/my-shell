@@ -8,4 +8,8 @@ curl -sL -o ~/.bashrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell
 # Backup .vimrc and add new one
 cp ~/.vimrc ~/.vimrc.original
 curl -sL -o ~/.vimrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/vimrc
+
+# Backup .tmux.conf and add new one
+cp ~/.tmux.conf ~/.tmux.conf.original
+curl -sL -o ~/.tmux.conf https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/tmux.conf
 ```
