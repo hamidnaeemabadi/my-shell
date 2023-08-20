@@ -144,3 +144,6 @@ alias cls='clear'
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 alias update='sudo apt update && sudo apt upgrade -y'
 alias less='less -N'
+alias dc='docker-compose'
+
+
