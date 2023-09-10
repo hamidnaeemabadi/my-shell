@@ -1,5 +1,5 @@
 ############################################
-# By Hamid Naeemabadi - Debian Based       #
+#          By Hamid Naeemabadi             #
 ############################################
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
@@ -140,10 +140,21 @@ source /etc/profile.d/bash_completion.sh
 alias ll='ls -larth --group-directories-first'
 alias l='ls -larth --group-directories-first'
 alias la='ls -A'
+alias ..="cd .."
+alias cd..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias where=which
+alias hosts="sudo $EDITOR /etc/hosts" 
 alias cls='clear'
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 alias update='sudo apt update && sudo apt upgrade -y'
 alias less='less -N'
+alias v="vim"
+#docker
+alias d="docker"
+alias dps="docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
 alias dc='docker-compose'
 
 
