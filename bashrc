@@ -154,7 +154,8 @@ alias less='less -N'
 alias v="vim"
 #docker
 alias d="docker"
-alias dps="docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
 alias dc='docker-compose'
+alias dps="docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
+alias dtop='docker stats'
 
 
