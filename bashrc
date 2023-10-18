@@ -150,7 +150,7 @@ alias hosts="sudo $EDITOR /etc/hosts"
 alias cls='clear'
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 alias update='sudo apt update && sudo apt upgrade -y'
-alias less='less -N'
+alias less='less -NR'
 alias v="vim"
 #docker
 alias d="docker"
