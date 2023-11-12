@@ -152,10 +152,15 @@ alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 alias update='sudo apt update && sudo apt upgrade -y'
 alias less='less -NR'
 alias v="vim"
-#docker
+
+# docker
 alias d="docker"
 alias dc='docker-compose'
 alias dps="docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
 alias dtop='docker stats'
 
+# iptables
+alias fwl='sudo iptables -nvL --line-number'
+alias fws='sudo iptables-save > /etc/iptables/rules.v4'
+alias fwr='sudo iptables-restore /etc/iptables/rules.v4'
 
