@@ -153,6 +153,16 @@ alias update='sudo apt update && sudo apt upgrade -y'
 alias less='less -NR'
 alias v="vim"
 
+# systemctl
+# Alias for systemctl with auto-completion
+alias sc='systemctl'
+# Load the systemctl auto-completion function
+if [ -r /usr/share/bash-completion/completions/systemctl ]; then
+    . /usr/share/bash-completion/completions/systemctl
+fi
+# Apply auto-completion to the alias
+complete -F _systemctl sc
+
 # docker
 alias d="docker"
 alias dc='docker-compose'
