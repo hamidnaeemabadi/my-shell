@@ -1,6 +1,8 @@
-############################################
-#          By Hamid Naeemabadi             #
-############################################
+# shellcheck disable=SC2148
+#################################################
+#             By Hamid Naeemabadi               #
+#  https://github.com/hamidnaeemabadi/my-shell  #
+#################################################
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -135,6 +137,9 @@ export EDITOR=vim
 
 # Bash autocompletion
 source /etc/profile.d/bash_completion.sh
+bind -f ~/.inputrc
+bind 'set show-all-if-ambiguous on'
+bind 'TAB:menu-complete'
 
 # My custom aliases
 alias ll='ls -larth --group-directories-first'
@@ -165,9 +170,30 @@ complete -F _systemctl sc
 
 # docker
 alias d="docker"
-alias dc='docker-compose'
+# Load the docker auto-completion function
+if [ -r /usr/share/bash-completion/completions/docker ]; then
+    . /usr/share/bash-completion/completions/docker
+fi
+# Apply auto-completion to the alias
+complete -F _docker d
+
+# docker-compose
+alias dc='docker compose'
+# Download and install docker-compose auto-completion
+DC_AUTOBASH_COMPLETE_FILE="/etc/bash_completion.d/docker-compose"
+if [ ! -f "$DC_AUTOBASH_COMPLETE_FILE" ]; then
+    sudo curl -L https://raw.githubusercontent.com/docker/compose/1.23.2/contrib/completion/bash/docker-compose -o "$DC_AUTOBASH_COMPLETE_FILE"
+fi
+# Source the docker-compose auto-completion script
+if [ -r /etc/bash_completion.d/docker-compose ]; then
+    . /etc/bash_completion.d/docker-compose
+fi
+# Apply auto-completion to the alias
+complete -F _docker_compose dc
+
 alias dps="docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
 alias dtop='docker stats'
+alias dctop='docker compose top'
 
 # iptables
 alias fwl='sudo iptables -nvL --line-number'
