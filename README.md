@@ -3,7 +3,9 @@
 ```bash
 # Backup .bashrc and add new one
 cp ~/.bashrc ~/.bashrc.original
+cp ~/.inputrc ~/.inputrc.original
 curl -sL -o ~/.bashrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/bashrc
+curl -sL -o ~/.inputrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/inputrc
 
 # Backup .vimrc and add new one
 cp ~/.vimrc ~/.vimrc.original
