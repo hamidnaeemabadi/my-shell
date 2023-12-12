@@ -168,7 +168,7 @@ fi
 # Apply auto-completion to the alias
 complete -F _systemctl sc
 
-# docker
+####################### docker #######################
 alias d="docker"
 # Load the docker auto-completion function
 if [ -r /usr/share/bash-completion/completions/docker ]; then
@@ -193,7 +193,13 @@ complete -F _docker_compose dc
 
 alias dps="docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
 alias dtop='docker stats'
+alias dtf='docker logs -f'
+alias dlog='docker ps -q | xargs -L 1 -P $(docker ps | wc -l) docker logs --since 30s --follow'
+alias dim='docker images'
+alias dcps='docker compose ps -a'
 alias dctop='docker compose top'
+alias dceve='docker compose events'
+######################################################
 
 # iptables
 alias fwl='sudo iptables -nvL --line-number'
