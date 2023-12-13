@@ -168,6 +168,9 @@ fi
 # Apply auto-completion to the alias
 complete -F _systemctl sc
 
+# swap
+alias swpfree="sudo swapoff -va && sudo swapon -va"
+
 ####################### docker #######################
 alias d="docker"
 # Load the docker auto-completion function
