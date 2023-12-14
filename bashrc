@@ -144,6 +144,7 @@ bind 'TAB:menu-complete'
 # My custom aliases
 alias ll='ls -larth --group-directories-first'
 alias l='ls -larth --group-directories-first'
+alias lper='stat -c '%a %n' *'
 alias la='ls -A'
 alias ..="cd .."
 alias cd..="cd .."
