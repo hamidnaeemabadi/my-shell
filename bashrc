@@ -168,11 +168,18 @@ if [ -r /usr/share/bash-completion/completions/systemctl ]; then
 fi
 # Apply auto-completion to the alias
 complete -F _systemctl sc
+alias scs='systemctl status'
+alias scdr='systemctl daemon-reload'
+alias scrl='systemctl reload'
+alias scrs='systemctl restart'
 
 # swap
 alias swpfree="sudo swapoff -va && sudo swapon -va"
 
-####################### docker #######################
+# show netstat 
+alias nts='netstat -ntulp'
+
+# docker
 alias d="docker"
 # Load the docker auto-completion function
 if [ -r /usr/share/bash-completion/completions/docker ]; then
@@ -204,6 +211,14 @@ alias ddf='docker system df'
 alias dcps='docker compose ps -a'
 alias dctop='docker compose top'
 alias dceve='docker compose events'
+
+# git
+alias gs='git status'
+alias gl='git log'
+alias glp='git log --pretty=format:"%s"'
+alias glon='git clone'
+alias gp='git pull'
+alias gc='git commit -S -m'
 ######################################################
 
 # iptables
