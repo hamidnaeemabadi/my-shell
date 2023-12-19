@@ -162,7 +162,7 @@ alias update='sudo apt update && sudo apt upgrade -y'
 alias less='less -NR'
 alias v="vim"
 
-# systemctl
+# systemctl #########################################
 # Alias for systemctl with auto-completion
 alias sc='systemctl'
 # Load the systemctl auto-completion function
@@ -182,7 +182,20 @@ alias swpfree="sudo swapoff -va && sudo swapon -va"
 # show netstat 
 alias nts='netstat -ntulp'
 
-# docker
+# git ################################################
+alias gs='git status'
+alias gl='git log'
+alias glp='git log --pretty=format:"%s"'
+alias glon='git clone'
+alias gp='git pull'
+alias gc='git commit -S -m'
+
+# iptables ###########################################
+alias fwl='sudo iptables -nvL --line-number'
+alias fws='sudo iptables-save > /etc/iptables/rules.v4'
+alias fwr='sudo iptables-restore /etc/iptables/rules.v4'
+
+# docker #############################################
 alias d="docker"
 # Load the docker auto-completion function
 if [ -r /usr/share/bash-completion/completions/docker ]; then
@@ -191,7 +204,7 @@ fi
 # Apply auto-completion to the alias
 complete -F _docker d
 
-# docker-compose
+# docker-compose 
 alias dc='docker compose'
 # Download and install docker-compose auto-completion
 DC_AUTOBASH_COMPLETE_FILE="/etc/bash_completion.d/docker-compose"
@@ -215,19 +228,36 @@ alias dcps='docker compose ps -a'
 alias dctop='docker compose top'
 alias dceve='docker compose events'
 
-# git
-alias gs='git status'
-alias gl='git log'
-alias glp='git log --pretty=format:"%s"'
-alias glon='git clone'
-alias gp='git pull'
-alias gc='git commit -S -m'
-######################################################
+# K8s ################################################
+alias k='kubectl'
+alias kg='kubectl get'
 
-# iptables
-alias fwl='sudo iptables -nvL --line-number'
-alias fws='sudo iptables-save > /etc/iptables/rules.v4'
-alias fwr='sudo iptables-restore /etc/iptables/rules.v4'
+## Pods
+alias kgpo='kubectl get pods'
+alias kgpoojson='kubectl get pods -o=json'
+alias kgpon='kubectl get pods --namespace'
+
+## Namespace Specific
+alias ksysgpooyamll='kubectl --namespace=kube-system get pods -o=yaml -l'
+
+## Deployments
+alias kgd='kubectl get deploy' # deploy is the short name of deployment
+
+## Services
+alias kgs='kubectl get svc'
+
+## Create, Run, Apply, Delete
+alias kc='kubectl create'
+alias kr='kubectl run'
+alias ka='kubectl apply -f'
+alias kd='kubectl delete'
+
+## Port Forwarding
+alias kpf='kubectl port-forward'
+
+## Describe
+alias kd='kubectl describe'
+
 
 ################  bashrc Autoupdate  #################
 curl -sL -o ~/.bashrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/bashrc
