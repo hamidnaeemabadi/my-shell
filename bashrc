@@ -231,5 +231,4 @@ alias fwr='sudo iptables-restore /etc/iptables/rules.v4'
 
 ################  bashrc Autoupdate  #################
 curl -sL -o ~/.bashrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/bashrc
-. ~/.bashrc
 ######################################################
