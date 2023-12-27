@@ -209,7 +209,7 @@ alias dc='docker compose'
 # Download and install docker-compose auto-completion
 DC_AUTOBASH_COMPLETE_FILE="/etc/bash_completion.d/docker-compose"
 if [ ! -f "$DC_AUTOBASH_COMPLETE_FILE" ]; then
-    sudo curl -L https://raw.githubusercontent.com/docker/compose/1.23.2/contrib/completion/bash/docker-compose -o "$DC_AUTOBASH_COMPLETE_FILE"
+    sudo curl -sL https://raw.githubusercontent.com/docker/compose/1.23.2/contrib/completion/bash/docker-compose -o "$DC_AUTOBASH_COMPLETE_FILE"
 fi
 # Source the docker-compose auto-completion script
 if [ -r /etc/bash_completion.d/docker-compose ]; then
