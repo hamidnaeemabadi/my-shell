@@ -221,7 +221,7 @@ complete -F _docker_compose dc
 
 alias dps="docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
 alias dtop='docker stats'
-alias dtf='docker logs -f'
+alias dlf='docker logs -f'
 alias dlog='docker ps -q | xargs -L 1 -P $(docker ps | wc -l) docker logs --since 30s --follow'
 alias dim='docker images'
 alias ddf='docker system df'
