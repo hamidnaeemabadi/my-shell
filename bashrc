@@ -140,9 +140,9 @@ export EDITOR=vim
 
 # Bash autocompletion
 source /etc/profile.d/bash_completion.sh
-bind -f ~/.inputrc
-bind 'set show-all-if-ambiguous on'
-bind 'TAB:menu-complete'
+# bind -f ~/.inputrc
+# bind 'set show-all-if-ambiguous on'
+# bind 'TAB:menu-complete'
 
 # My custom aliases
 alias ll='ls -larth --group-directories-first'
