@@ -262,5 +262,5 @@ alias kd='kubectl describe'
 
 
 ################  bashrc Autoupdate  #################
-curl -sL -o ~/.bashrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/bashrc
+# curl -sL -o ~/.bashrc https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main/bashrc
 ######################################################
