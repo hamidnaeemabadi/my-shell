@@ -162,6 +162,8 @@ alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 alias update='sudo apt update && sudo apt upgrade -y'
 alias less='less -NR'
 alias v="vim"
+alias tf="tail -f"
+alias fdns="sudo resolvectl flush-caches && sudo resolvectl statistics"
 alias osver="cat /etc/os-release"
 
 # systemctl #########################################
