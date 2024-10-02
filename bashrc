@@ -165,6 +165,11 @@ alias v="vim"
 alias tf="tail -f"
 alias fdns="sudo resolvectl flush-caches && sudo resolvectl statistics"
 alias osver="cat /etc/os-release"
+alias chs="cat /etc/hosts"
+alias crl="crontab -l"
+alias cre="crontab -e"
+alias ht="htop"
+alias fr="free -hm"
 
 # systemctl #########################################
 # Alias for systemctl with auto-completion
@@ -186,6 +191,10 @@ alias swpfree="sudo swapoff -va && sudo swapon -va"
 # show netstat 
 alias nts='netstat -ntulp'
 
+# nginx ################################################
+alias ngt='nginx -t'
+alias ngr='nginx -t && systemctl reload nginx'
+
 # git ################################################
 alias gs='git status'
 alias gl='git log'
@@ -198,6 +207,11 @@ alias gc='git commit -S -m'
 alias fwl='sudo iptables -nvL --line-number'
 alias fws='sudo iptables-save > /etc/iptables/rules.v4'
 alias fwr='sudo iptables-restore /etc/iptables/rules.v4'
+
+# pm2 #############################################
+alias pl='pm2 ls'
+alias plg='pm2 logs'
+alias pm='pm2 monit'
 
 # docker #############################################
 alias d="docker"
