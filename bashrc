@@ -170,6 +170,7 @@ alias crl="crontab -l"
 alias cre="crontab -e"
 alias ht="htop"
 alias fr="free -hm"
+alias pc='proxychains'
 
 # systemctl #########################################
 # Alias for systemctl with auto-completion
