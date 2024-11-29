@@ -252,7 +252,7 @@ alias k='kubectl'
 alias kg='kubectl get'
 
 ## Pods
-alias kgpo='kubectl get pods'
+alias kgpo='kubectl get pods -o wide'
 alias kgpoojson='kubectl get pods -o=json'
 alias kgpon='kubectl get pods --namespace'
 
@@ -260,7 +260,7 @@ alias kgpon='kubectl get pods --namespace'
 alias ksysgpooyamll='kubectl --namespace=kube-system get pods -o=yaml -l'
 
 ## Deployments
-alias kgd='kubectl get deploy' # deploy is the short name of deployment
+alias kgd='kubectl get deploy' # deploy is the short name of the deployment
 
 ## Services
 alias kgs='kubectl get svc'
