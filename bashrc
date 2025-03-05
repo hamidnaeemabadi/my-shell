@@ -154,6 +154,10 @@ alias cd..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
 alias .....="cd ../../../.."
+# Function to run ls after cd
+cd() {
+    builtin cd "$@" && ls -larth --group-directories-first
+}
 alias where=which
 alias hosts="sudo $EDITOR /etc/hosts" 
 alias cls='clear'
