@@ -216,9 +216,13 @@ alias fws='sudo iptables-save > /etc/iptables/rules.v4'
 alias fwr='sudo iptables-restore /etc/iptables/rules.v4'
 
 # pm2 #############################################
-alias pl='pm2 ls'
-alias plg='pm2 logs'
-alias pm='pm2 monit'
+alias pml='pm2 ls'
+alias pmrl='pm2 reload'
+alias pmrs='pm2 restart'
+alias pmlg='pm2 logs'
+alias pmm='pm2 monit'
+alias pmd='pm2 desc'
+alias pms='pm2 save && pm2 startup'
 
 # docker #############################################
 alias d="docker"
