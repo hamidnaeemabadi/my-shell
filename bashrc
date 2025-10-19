@@ -209,6 +209,7 @@ alias glp='git log --pretty=format:"%s"'
 alias glon='git clone'
 alias gp='git pull'
 alias gc='git commit -S -m'
+alias gdf='git diff'
 
 # iptables ###########################################
 alias fwl='sudo iptables -nvL --line-number'
