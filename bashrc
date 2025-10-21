@@ -145,8 +145,8 @@ source /etc/profile.d/bash_completion.sh
 # bind 'TAB:menu-complete'
 
 # My custom aliases
-alias ll='ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto'
-alias l='ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto'
+alias ll="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
+alias l="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
 alias lper="stat -c '%a %n' *"
 alias la='ls -A'
 alias ..="cd .."
