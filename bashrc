@@ -177,6 +177,7 @@ alias cre="crontab -e"
 alias ht="htop"
 alias fr="free -hm"
 alias pc='proxychains'
+alias shad='eval "$(ssh-agent -s)" && ssh-add /home/$(whoami)/.ssh/id_rsa'
 
 # systemctl #########################################
 # Alias for systemctl with auto-completion
