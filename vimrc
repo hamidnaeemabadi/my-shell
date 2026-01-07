@@ -1,46 +1,81 @@
+"""" ========================
 """" Basic Behavior
+"""" ========================
 
-set number              " show line numbers
-set wrap                " wrap lines
-set encoding=utf-8      " set encoding to UTF-8 (default was "latin1")
-""set mouse=a             " enable mouse support (might not work well on Mac OS X)
-set wildmenu            " visual autocomplete for command menu
-set lazyredraw          " redraw screen only when we need to
-set showmatch           " highlight matching parentheses / brackets [{()}]
-set laststatus=2        " always show statusline (even with only single window)
-set ruler               " show line and column number of the cursor on right side of statusline
-""""set visualbell          " blink cursor on error, instead of beeping
+set number              " Show absolute line numbers
+set wrap                " Wrap long lines instead of overflowing horizontally
+set encoding=utf-8      " Use UTF-8 encoding for files and buffers
+""set mouse=a           " Enable mouse support in all modes (disabled – can be buggy on macOS)
+set mouse=              " Explicitly disable mouse support
+set wildmenu            " Enable enhanced command-line completion menu
+set lazyredraw          " Do not redraw screen during macros (improves performance)
+set showmatch           " Highlight matching brackets/parentheses
+set laststatus=2        " Always show the statusline, even with one window
+set ruler               " Show cursor position (line and column) in the statusline
+""""set visualbell      " Use visual bell instead of sound (disabled)
 
 
+"""" ========================
 """" Key Bindings
+"""" ========================
 
-" move vertically by visual line (don't skip wrapped lines)
+" Move down by *visual* line (respects wrapped lines)
 nmap j gj
+
+" Move up by *visual* line (respects wrapped lines)
 nmap k gk
 
 
+"""" ========================
 """" Vim Appearance
+"""" ========================
 
-" put colorscheme files in ~/.vim/colors/
-colorscheme murphy      " good colorschemes: murphy, slate, molokai, badwolf, solarized
+" Load colorscheme from ~/.vim/colors/
+"colorscheme murphy      " Set colorscheme (alternatives: slate, molokai, badwolf, solarized)
+colorscheme koehler      " Set colorscheme (alternatives: slate, molokai, badwolf, solarized)
+"colorscheme desert      " Set colorscheme (alternatives: slate, molokai, badwolf, solarized)
+"colorscheme default      " Set colorscheme (alternatives: slate, molokai, badwolf, solarized)
 
-" use filetype-based syntax highlighting, ftplugins, and indentation
-syntax enable
-filetype plugin indent on
-
-
-"""" Tab settings
-
-set tabstop=4           " width that a <TAB> character displays as
-set expandtab           " convert <TAB> key-presses to spaces
-set shiftwidth=4        " number of spaces to use for each step of (auto)indent
-set softtabstop=4       " backspace after pressing <TAB> will remove up to this many spaces
-
-set autoindent          " copy indent from current line when starting a new line
-set smartindent         " even better autoindent (e.g. add indent after '{')
+set nocompatible        " Disable Vi compatibility for full Vim feature set
+syntax on               " Enable syntax highlighting
+syntax enable           " Ensure syntax highlighting is fully enabled
+filetype plugin indent on " Enable filetype detection, plugins, and indentation rules
 
 
-"""" Search settings
+"""" ========================
+"""" Tab and Indentation Settings
+"""" ========================
 
-set incsearch           " search as characters are entered
-set hlsearch            " highlight matches
+set tabstop=4           " Display width of a <TAB> character
+set expandtab           " Convert tabs into spaces
+set shiftwidth=4        " Number of spaces for each indentation level
+set softtabstop=4       " Number of spaces removed when pressing backspace
+
+set autoindent          " Copy indentation from the current line
+set smartindent         " Automatically add indentation after blocks (e.g. '{')
+
+
+"""" ========================
+"""" Search Settings
+"""" ========================
+
+set incsearch           " Show search matches as you type
+set hlsearch            " Highlight all search matches
+
+
+"""" ========================
+"""" Editing & UI Enhancements
+"""" ========================
+
+set relativenumber      " Show relative line numbers (useful for motions like 5j)
+set showcmd             " Display incomplete commands in the statusline
+set hidden              " Allow switching buffers without saving
+set clipboard=unnamedplus " Use system clipboard for yank, delete, and paste
+
+set linebreak           " Wrap lines at word boundaries (no mid-word breaks)
+set cursorline          " Highlight the line where the cursor is
+set background=dark     " Optimize colors for dark terminal backgrounds
+"colorscheme desert      " Override colorscheme with 'desert'
+
+set updatetime=300      " Faster CursorHold events (useful for LSP, git signs)
+set signcolumn=yes      " Always show sign column (prevents text shifting)
