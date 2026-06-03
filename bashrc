@@ -127,7 +127,7 @@ function my_prompt {
     if [ "$EUID" -eq 0 ]; then
         local prompt_char="\[\033[01;31m\]#\[\033[00m\]"
     else
-        local prompt_char="\$"
+        local prompt_char="\[\033[01;34m\]\$\[\033[00m\]"
     fi
 
     # Git branch detection
@@ -135,10 +135,14 @@ function my_prompt {
     local branch
     branch=$(git -C . rev-parse --abbrev-ref HEAD 2>/dev/null)
     if [ -n "$branch" ]; then
-        git_str=" \[\033[01;33m\](${branch})\[\033[00m\]"
+        git_str=" \[\033[01;32m\](${branch})\[\033[00m\]"
     fi
 
-    PS1="${debian_chroot:+($debian_chroot)}\[\033[01;36m\][${user_color}\u\[\033[01;36m\]@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]${field3}${elapsed_str}${git_str}${prompt_char}\n "
+    # Line 1: ┌──(user@host)-[path]-[time] rc jobs elapsed git
+    # Line 2: └─$
+    local cyan="\[\033[01;36m\]"
+    local reset="\[\033[00m\]"
+    PS1="${cyan}┌──${reset}${cyan}[${user_color}\u\[\033[01;36m\]@\H${cyan}]${reset}-${cyan}[\w]${reset}-\[\033[01;35m\][\t]${reset}\[\033[00;00m\]${field3}${git_str}${elapsed_str}\n${cyan}└─${reset}${prompt_char} "
 }
 PROMPT_COMMAND="my_prompt; ${PROMPT_COMMAND}"
 
