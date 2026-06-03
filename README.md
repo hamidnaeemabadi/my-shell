@@ -1,4 +1,4 @@
-# My Custom Shell
+# My Custom Bash Shell
 
 ## Add to your system
 

@@ -28,7 +28,7 @@ shopt -s autocd
 # HISTFILESIZE=2000
 
 HISTSIZE=36000
-SAVEHIST=36000
+HISTFILESIZE=36000
 HISTTIMEFORMAT="[%Y-%m-%d %H:%M:%S] "
 
 # check the window size after each command and, if necessary,
