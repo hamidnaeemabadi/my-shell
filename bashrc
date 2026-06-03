@@ -130,7 +130,15 @@ function my_prompt {
         local prompt_char="\$"
     fi
 
-    PS1="${debian_chroot:+($debian_chroot)}\[\033[01;36m\][${user_color}\u\[\033[01;36m\]@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]${field3}${elapsed_str}${prompt_char}\n "
+    # Git branch detection
+    local git_str=""
+    local branch
+    branch=$(git -C . rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [ -n "$branch" ]; then
+        git_str=" \[\033[01;33m\](${branch})\[\033[00m\]"
+    fi
+
+    PS1="${debian_chroot:+($debian_chroot)}\[\033[01;36m\][${user_color}\u\[\033[01;36m\]@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]${field3}${elapsed_str}${git_str}${prompt_char}\n "
 }
 PROMPT_COMMAND="my_prompt; ${PROMPT_COMMAND}"
 
