@@ -69,18 +69,63 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\][\u@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]\$\n '
+    if [ "$EUID" -eq 0 ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;31m\][\u@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]\$\n '
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\][\u@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]\$\n '
+    fi
 else
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\][\u@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]\$\n '
+    if [ "$EUID" -eq 0 ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;31m\][\u@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]\$\n '
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\][\u@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]\$\n '
+    fi
 fi
+
+# Track command start time for elapsed time display
+_cmd_start_time=
+_cmd_timer_active=0
+
+function _cmd_timer_start {
+    # Only record time for the first DEBUG hit (the actual user command, not PROMPT_COMMAND internals)
+    if [ "$_cmd_timer_active" -eq 0 ]; then
+        _cmd_start_time=$SECONDS
+        _cmd_timer_active=1
+    fi
+}
+trap '_cmd_timer_start' DEBUG
 
 function my_prompt {
     local retval=$?
-    local field3='$([ \j -gt 0 ] && echo \ jobs:\j)'"$(echo \ exit:$retval)"
-    
-    # PS1=$'\n'"\e[0;35m${field1}\e[m \e[0;34m${field2}\e[m\e[0;31m${field3}\e[m"$'\n'"\[\e[0;36m\]${field4}\[\e[m\] "
-    
-    PS1="${debian_chroot:+($debian_chroot)}\[\033[01;36m\][\u@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]${field3}\$\n "
+    local field3='$([ \j -gt 0 ] && echo \ jobs:\j)'"$(echo \ rc:$retval)"
+
+    # Elapsed time
+    local elapsed_str=""
+    if [ -n "$_cmd_start_time" ] && [ "$_cmd_timer_active" -eq 1 ]; then
+        local elapsed=$(( SECONDS - _cmd_start_time ))
+        if [ "$elapsed" -ge 1 ]; then
+            elapsed_str=" \[\033[01;33m\][⏱ ${elapsed}s]\[\033[00m\]"
+        fi
+    fi
+    # Reset for next command
+    _cmd_start_time=
+    _cmd_timer_active=0
+
+    # Use red for root username only, cyan for everything else
+    local user_color
+    if [ "$EUID" -eq 0 ]; then
+        user_color="\[\033[01;31m\]"
+    else
+        user_color="\[\033[01;36m\]"
+    fi
+
+    if [ "$EUID" -eq 0 ]; then
+        local prompt_char="\[\033[01;31m\]#\[\033[00m\]"
+    else
+        local prompt_char="\$"
+    fi
+
+    PS1="${debian_chroot:+($debian_chroot)}\[\033[01;36m\][${user_color}\u\[\033[01;36m\]@\H]\[\033[00m\]\[\033[01;34m\][\w]\[\033[01;35m\][\t]\[\033[00;00m\]${field3}${elapsed_str}${prompt_char}\n "
 }
 PROMPT_COMMAND="my_prompt; ${PROMPT_COMMAND}"
 
