@@ -39,8 +39,13 @@ shopt -s checkwinsize
 # match all files and zero or more directories and subdirectories.
 #shopt -s globstar
 
-# make less more friendly for non-text input files, see lesspipe(1)
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+# make less more friendly for non-text input files
+# lesspipe (Debian/Ubuntu) or lesspipe.sh (RHEL/CentOS/Fedora)
+if [ -x /usr/bin/lesspipe ]; then
+    eval "$(SHELL=/bin/sh lesspipe)"
+elif [ -x /usr/bin/lesspipe.sh ]; then
+    eval "$(SHELL=/bin/sh lesspipe.sh)"
+fi
 
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
@@ -168,28 +173,24 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
-# enable programmable completion features (you don't need to enable
-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-# sources /etc/bash.bashrc).
+# enable programmable completion features
 if ! shopt -oq posix; then
     if [ -f /usr/share/bash-completion/bash_completion ]; then
         . /usr/share/bash-completion/bash_completion
-        elif [ -f /etc/bash_completion ]; then
+    elif [ -f /etc/bash_completion ]; then
         . /etc/bash_completion
     fi
 fi
 
+# Bash autocompletion (profile.d — present on most distros)
+if [ -f /etc/profile.d/bash_completion.sh ]; then
+    source /etc/profile.d/bash_completion.sh
+fi
 # My Editor
 export VISUAL=vim
 export EDITOR=vim
 
-# Bash autocompletion
-source /etc/profile.d/bash_completion.sh
-# bind -f ~/.inputrc
-# bind 'set show-all-if-ambiguous on'
-# bind 'TAB:menu-complete'
 
-# My custom aliases
 alias ll="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
 alias l="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
 alias lper="stat -c '%a %n' *"
@@ -206,15 +207,45 @@ cd() {
 alias where=which
 alias hosts="sudo $EDITOR /etc/hosts" 
 alias cls='clear'
-alias lip='ip -o addr show | awk '\''{print $2, $4}'\'''
+lip() { ip -o addr show | awk '{print $2, $4}'; }
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
+# Package manager aliases — Debian/Ubuntu
 alias apt='sudo apt'
 alias nala='sudo nala'
-alias update='sudo apt update && sudo apt upgrade -y'
+# Package manager aliases — RHEL/CentOS/Fedora
+alias dnf='sudo dnf'
+alias yum='sudo yum'
+alias qproxy='sudo qproxy'
+# Universal update function — detects the package manager
+update() {
+    read -rp "Update packages? [y/N] " _answer
+    [[ "$_answer" != [yY] ]] && echo "Aborted." && return 0
+
+    if command -v apt &>/dev/null; then
+        sudo apt update && sudo apt upgrade -y
+    elif command -v dnf &>/dev/null; then
+        sudo dnf upgrade -y
+    elif command -v yum &>/dev/null; then
+        sudo yum update -y
+    else
+        echo "No supported package manager found (apt/dnf/yum)"
+    fi
+}
 alias less='less -NR'
 alias v="vim"
 alias tf="tail -f"
-alias fdns="sudo resolvectl flush-caches && sudo resolvectl statistics"
+# DNS flush — works on both systemd-resolved (Ubuntu/RHEL 8+) and older RHEL (nscd/named)
+fdns() {
+    if command -v resolvectl &>/dev/null; then
+        sudo resolvectl flush-caches && sudo resolvectl statistics
+    elif command -v systemd-resolve &>/dev/null; then
+        sudo systemd-resolve --flush-caches && sudo systemd-resolve --statistics
+    elif command -v nscd &>/dev/null; then
+        sudo nscd -i hosts
+    else
+        echo "No supported DNS cache manager found"
+    fi
+}
 alias osver="cat /etc/os-release && uname -a"
 alias chs="cat /etc/hosts"
 alias crl="crontab -l"
