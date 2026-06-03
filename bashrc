@@ -98,6 +98,8 @@ function _cmd_timer_start {
     # if it matches my_prompt (our PROMPT_COMMAND function) we ignore it.
     [[ "$BASH_COMMAND" == "my_prompt"* ]] && return
     [[ "$BASH_COMMAND" == "_cmd_timer_start" ]] && return
+    # Skip empty or whitespace-only commands
+    [[ -z "${BASH_COMMAND// }" ]] && return
 
     if [ "$_cmd_timer_active" -eq 0 ]; then
         _cmd_start_time=$SECONDS
