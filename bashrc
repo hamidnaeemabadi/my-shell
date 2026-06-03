@@ -90,12 +90,19 @@ fi
 # Track command start time for elapsed time display
 _cmd_start_time=
 _cmd_timer_active=0
+_cmd_just_ran=0
 
 function _cmd_timer_start {
-    # Only record time for the first DEBUG hit (the actual user command, not PROMPT_COMMAND internals)
+    # Skip PROMPT_COMMAND internals and empty Enter presses.
+    # BASH_COMMAND holds the actual command string being executed;
+    # if it matches my_prompt (our PROMPT_COMMAND function) we ignore it.
+    [[ "$BASH_COMMAND" == "my_prompt"* ]] && return
+    [[ "$BASH_COMMAND" == "_cmd_timer_start" ]] && return
+
     if [ "$_cmd_timer_active" -eq 0 ]; then
         _cmd_start_time=$SECONDS
         _cmd_timer_active=1
+        _cmd_just_ran=1
     fi
 }
 trap '_cmd_timer_start' DEBUG
@@ -104,9 +111,9 @@ function my_prompt {
     local retval=$?
     local field3='$([ \j -gt 0 ] && echo \ jobs:\j)'"$(echo \ rc:$retval)"
 
-    # Elapsed time
+    # Elapsed time — only shown when the user actually ran a command
     local elapsed_str=""
-    if [ -n "$_cmd_start_time" ] && [ "$_cmd_timer_active" -eq 1 ]; then
+    if [ "$_cmd_just_ran" -eq 1 ] && [ -n "$_cmd_start_time" ]; then
         local elapsed=$(( SECONDS - _cmd_start_time ))
         if [ "$elapsed" -ge 1 ]; then
             elapsed_str=" \[\033[01;33m\][⏱ ${elapsed}s]\[\033[00m\]"
@@ -115,6 +122,7 @@ function my_prompt {
     # Reset for next command
     _cmd_start_time=
     _cmd_timer_active=0
+    _cmd_just_ran=0
 
     # Use red for root username only, cyan for everything else
     local user_color
