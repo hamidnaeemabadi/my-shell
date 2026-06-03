@@ -285,7 +285,7 @@ alias scrs='systemctl restart'
 alias swpfree="sudo swapoff -va && sudo swapon -va"
 
 # show netstat 
-alias nts='netstat -ntulp'
+alias nts='ss -ntulp'
 
 # nginx ################################################
 alias ngt='nginx -t'
@@ -353,7 +353,7 @@ alias kg='kubectl get'
 
 ## Pods
 alias kgpo='kubectl get pods -o wide'
-alias kgpoojson='kubectl get pods -o=json'
+alias kgpoj='kubectl get pods -o=json'
 alias kgpon='kubectl get pods --namespace'
 
 ## Namespace Specific
