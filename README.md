@@ -35,8 +35,16 @@ curl -sL -o ~/.config/htop/htoprc https://raw.githubusercontent.com/hamidnaeemab
 - If your htop is not the latest version, you can compile it from source (open a new shell to use the new htop):
 
   ```bash
+  if command -v apt-get &>/dev/null; then
   sudo apt-get -qq update && sudo apt-get install -y build-essential libncursesw5-dev autotools-dev \
-      autoconf automake git && sudo apt remove --purge -y htop && \
+          autoconf automake git
+  elif command -v dnf &>/dev/null; then
+      sudo dnf install -y gcc make ncurses-devel autoconf automake git
+  elif command -v yum &>/dev/null; then
+      sudo yum install -y gcc make ncurses-devel autoconf automake git
+  fi && \
+  if command -v apt-get &>/dev/null; then sudo apt remove --purge -y htop 2>/dev/null || true; \
+  else sudo dnf remove -y htop 2>/dev/null || sudo yum remove -y htop 2>/dev/null || true; fi && \
       TEMP_DIR=$(mktemp -d) && cd "$TEMP_DIR" && \ 
       git clone https://github.com/htop-dev/htop.git && cd htop && \ 
       LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1)) && \ 
