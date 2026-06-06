@@ -300,6 +300,8 @@ alias nts='ss -ntulp'
 # nginx ################################################
 alias ngt='nginx -t'
 alias ngr='nginx -t && systemctl reload nginx'
+alias ngt='docker exec nginx nginx -t'
+alias ngr='(docker exec nginx nginx -t) && (docker exec nginx nginx -s reload)'
 
 # git ################################################
 alias gs='git status'
