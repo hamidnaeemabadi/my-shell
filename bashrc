@@ -186,14 +186,8 @@ fi
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
+# Alias definitions — load ~/.bash_aliases at the END of this file (see bottom)
+# so a broken aliases file cannot interrupt parsing of the main config.
 
 # enable programmable completion features
 if ! shopt -oq posix; then
@@ -223,16 +217,13 @@ alias ...="cd ../.."
 alias ....="cd ../../.."
 alias .....="cd ../../../.."
 # Function to run ls after cd
-cd() {
+function cd {
     builtin cd "$@" && ls -larth --group-directories-first
 }
 alias where=which
-alias hosts='sudo "$EDITOR" /etc/hosts'
 alias cls='clear'
-
-lip() {
-    ip -o addr show | awk '{print $2, $4}'
-}
+alias hosts='sudo "$EDITOR" /etc/hosts'
+alias lip="ip -o addr show | awk '{print \$2, \$4}'"
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 # Package manager aliases — Debian/Ubuntu
 alias apt='sudo apt'
@@ -242,7 +233,7 @@ alias dnf='sudo dnf'
 alias yum='sudo yum'
 alias qproxy='sudo qproxy'
 # Universal update function — detects the package manager
-update() {
+function update {
     read -rp "Update packages? [y/N] " _answer
     [[ "$_answer" != [yY] ]] && echo "Aborted." && return 0
 
@@ -260,7 +251,7 @@ alias less='less -NR'
 alias v="vim"
 alias tf="tail -f"
 # DNS flush — works on both systemd-resolved (Ubuntu/RHEL 8+) and older RHEL (nscd/named)
-fdns() {
+function fdns {
     if command -v resolvectl &>/dev/null; then
         sudo resolvectl flush-caches && sudo resolvectl statistics
     elif command -v systemd-resolve &>/dev/null; then
@@ -391,6 +382,13 @@ alias kpf='kubectl port-forward'
 
 ## Describe
 alias kd='kubectl describe'
+
+
+# User overrides — sourced last so custom aliases/functions win
+if [ -f ~/.bash_aliases ]; then
+    # shellcheck disable=SC1090
+    . ~/.bash_aliases
+fi
 
 
 ################  bashrc Autoupdate  #################
