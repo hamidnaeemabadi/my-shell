@@ -227,9 +227,12 @@ cd() {
     builtin cd "$@" && ls -larth --group-directories-first
 }
 alias where=which
-alias hosts="sudo $EDITOR /etc/hosts" 
+alias hosts='sudo "$EDITOR" /etc/hosts'
 alias cls='clear'
-lip() { ip -o addr show | awk '{print $2, $4}'; }
+
+lip() {
+    ip -o addr show | awk '{print $2, $4}'
+}
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 # Package manager aliases — Debian/Ubuntu
 alias apt='sudo apt'
