@@ -16,17 +16,18 @@ esac
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
+HISTIGNORE="ls:ll:cd:cd -:pwd:exit:clear:c:cls:history"
 
 # append to the history file, don't overwrite it
 shopt -s histappend
+# multi-line commands as one history entry; keep newlines
+shopt -s cmdhist
+shopt -s lithist
 
 # auto cd to the directory
 shopt -s autocd
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-# HISTSIZE=1000
-# HISTFILESIZE=2000
-
 HISTSIZE=36000
 HISTFILESIZE=36000
 HISTTIMEFORMAT="[%Y-%m-%d %H:%M:%S] "
@@ -98,6 +99,7 @@ function _cmd_timer_start {
     # if it matches my_prompt (our PROMPT_COMMAND function) we ignore it.
     [[ "$BASH_COMMAND" == "my_prompt"* ]] && return
     [[ "$BASH_COMMAND" == "_cmd_timer_start" ]] && return
+    [[ "$BASH_COMMAND" == history* ]] && return
     # Skip empty or whitespace-only commands
     [[ -z "${BASH_COMMAND// }" ]] && return
 
@@ -110,6 +112,7 @@ function _cmd_timer_start {
 trap '_cmd_timer_start' DEBUG
 
 function my_prompt {
+    # Must run first in PROMPT_COMMAND so $? is the user's last command.
     local retval=$?
     local field3='$([ \j -gt 0 ] && echo \ jobs:\j)'"$(echo \ rc:$retval)"
 
@@ -153,8 +156,22 @@ function my_prompt {
     local cyan="\[\033[01;36m\]"
     local reset="\[\033[00m\]"
     PS1="${cyan}┌──${reset}${cyan}[${user_color}\u\[\033[01;36m\]@\H${cyan}]${reset}-${cyan}[\w]${reset}-\[\033[01;35m\][\t]${reset}\[\033[00;00m\]${field3}${git_str}${elapsed_str}\n${cyan}└─${reset}${prompt_char} "
+
+    # Share history across interactive terminals (after status capture).
+    history -a
+    history -n
 }
-PROMPT_COMMAND="my_prompt; ${PROMPT_COMMAND}"
+
+# Keep PROMPT_COMMAND idempotent because this file can be sourced more than once.
+__bashrc_prompt_command="${PROMPT_COMMAND:-}"
+__bashrc_prompt_command="${__bashrc_prompt_command//my_prompt; /}"
+__bashrc_prompt_command="${__bashrc_prompt_command//; my_prompt/}"
+__bashrc_prompt_command="${__bashrc_prompt_command/#my_prompt/}"
+__bashrc_prompt_command="${__bashrc_prompt_command/%my_prompt/}"
+__bashrc_prompt_command="${__bashrc_prompt_command#; }"
+__bashrc_prompt_command="${__bashrc_prompt_command%; }"
+PROMPT_COMMAND="my_prompt${__bashrc_prompt_command:+; $__bashrc_prompt_command}"
+unset __bashrc_prompt_command
 
 unset color_prompt force_color_prompt
 
@@ -202,10 +219,29 @@ fi
 if [ -f /etc/profile.d/bash_completion.sh ]; then
     source /etc/profile.d/bash_completion.sh
 fi
+
 # My Editor
 export VISUAL=vim
 export EDITOR=vim
 
+# Modern Bash completion UX (readline)
+bind 'set completion-ignore-case on'
+bind 'set completion-map-case on'
+bind 'set show-all-if-ambiguous on'
+bind 'set show-all-if-unmodified on'
+bind 'set menu-complete-display-prefix on'
+bind 'set colored-stats on'
+bind 'set colored-completion-prefix on'
+bind 'set mark-directories on'
+bind 'set mark-symlinked-directories on'
+bind 'set visible-stats on'
+bind 'TAB:menu-complete'
+bind '"\e[Z": menu-complete-backward'
+bind '"\e[A": history-search-backward'
+bind '"\e[B": history-search-forward'
+
+# Directory-only completion for path navigation commands.
+complete -o filenames -o nospace -A directory cd pushd
 
 alias ll="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
 alias l="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
@@ -216,15 +252,24 @@ alias cd..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
 alias .....="cd ../../../.."
+alias cdd='cd ~/Downloads'
+alias cde='cd /etc'
 # Function to run ls after cd
 function cd {
     builtin cd "$@" && ls -larth --group-directories-first
 }
+
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
 alias where=which
+alias c='clear'
 alias cls='clear'
 alias hosts='sudo "$EDITOR" /etc/hosts'
 alias lip="ip -o addr show | awk '{print \$2, \$4}'"
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
+
 # Package manager aliases — Debian/Ubuntu
 alias apt='sudo apt'
 alias nala='sudo nala'
@@ -262,6 +307,193 @@ function fdns {
         echo "No supported DNS cache manager found"
     fi
 }
+
+dns-test() {
+    local domain="${1:-}"
+    local entry
+    local name
+    local ip
+    local result
+    local resolved
+    local query_timeout=5
+    local dns_servers=(
+        "tci|5.200.200.200"
+        "recursive1.dci.ir|217.218.127.127"
+        "recursive2.dci.ir|217.218.155.155"
+        "pns01.afranet.ir|79.175.137.4"
+        "pns02.afranet.ir|79.175.136.4"
+        "dns1.begzar.ir|185.55.224.24"
+        "dns2.begzar.ir|185.55.226.26"
+        "dns3.begzar.ir|185.55.225.25"
+        "dns.electro1|78.157.42.100"
+        "dns.electro2|78.157.42.101"
+        "DNS|178.252.149.220"
+        "recursive1.dnspro.ir|87.107.110.109"
+        "recursive2.dnspro.ir|87.107.110.110"
+        "free.shecan.ir|178.22.122.100"
+        "dns.shecan.ir|185.51.200.2"
+        "403.online1|10.202.10.202"
+        "403.online2|10.202.10.102"
+        "403.online3|10.202.10.10"
+        "403.online4|10.202.10.11"
+        "dns94-1|94.103.125.157"
+        "dns94-2|94.103.125.158"
+        "beshkan1|181.41.194.177"
+        "beshkan2|181.41.194.186"
+        "dns5-1|5.202.100.100"
+        "dns5-2|5.202.100.101"
+        "level3-1|209.244.0.3"
+        "level3-2|209.244.0.4"
+        "dns85-1|85.15.1.14"
+        "dns85-2|85.15.1.15"
+    )
+
+    if ! command -v nslookup >/dev/null 2>&1; then
+        echo "Error: nslookup is required but not installed."
+        return 1
+    fi
+
+    if [ -z "$domain" ]; then
+        read -r -p "Enter domain to test: " domain
+    fi
+
+    if [ -z "$domain" ]; then
+        echo "Error: domain is required."
+        echo "Usage: dns-test <domain>"
+        return 1
+    fi
+
+    echo "Testing DNS resolution for: $domain"
+    echo "------------------------------------"
+
+    for entry in "${dns_servers[@]}"; do
+        name="${entry%%|*}"
+        ip="${entry##*|}"
+        result="$(timeout "${query_timeout}" nslookup "$domain" "$ip" 2>/dev/null)"
+
+        if [ $? -eq 124 ]; then
+            echo "⏱️  $name ($ip) -> TIMEOUT after ${query_timeout}s"
+        elif echo "$result" | grep -q "Address:"; then
+            resolved="$(echo "$result" | grep "Address:" | tail -n1 | awk '{print $2}')"
+            echo "✅ $name ($ip) -> $resolved"
+        else
+            echo "❌ $name ($ip) -> FAILED"
+        fi
+
+        sleep 2
+    done
+}
+
+unalias random-password 2>/dev/null || true
+random-password() {
+    local length="${1:-}"
+
+    if [ -z "$length" ]; then
+        read -r -p "Enter password length [48]: " length
+        length="${length:-48}"
+    fi
+
+    head /dev/urandom | tr -dc 'A-Za-z0-9' | head -c "${length}"
+    echo
+}
+
+top-ram-10() {
+    ps aux --sort=-%mem | head -11
+}
+
+top-cpu-10() {
+    ps aux --sort=-%cpu | head -11
+}
+
+top-ram-10-10min() {
+    if command -v journalctl >/dev/null 2>&1; then
+        local output
+        output="$(journalctl --since "10 minutes ago" --no-pager | grep -Ei 'out of memory|oom|killed process|memory cgroup|invoked oom-killer|memory' | tail -100)"
+        if [ -n "$output" ]; then
+            echo "$output"
+        else
+            ps -eo pid,user,etimes,%mem,%cpu,comm --sort=-%mem | awk 'NR==1 || $3 <= 600' | head -11
+            echo
+            echo "No RAM/OOM related journal entries found in the last 10 minutes."
+            echo "For the previous boot, run: last-boot-ram-issues"
+        fi
+    else
+        echo "journalctl is not available; historical RAM usage needs logging before reboot."
+        return 1
+    fi
+}
+
+top-cpu-10-10min() {
+    if command -v journalctl >/dev/null 2>&1; then
+        local output
+        output="$(journalctl --since "10 minutes ago" --no-pager | grep -Ei 'cpu|load average|soft lockup|hard lockup|hung task|watchdog' | tail -100)"
+        if [ -n "$output" ]; then
+            echo "$output"
+        else
+            ps -eo pid,user,etimes,%mem,%cpu,comm --sort=-%cpu | awk 'NR==1 || $3 <= 600' | head -11
+            echo
+            echo "No CPU/load related journal entries found in the last 10 minutes."
+            echo "For the previous boot, run: last-boot-cpu-issues"
+        fi
+    else
+        echo "journalctl is not available; historical CPU usage needs logging before reboot."
+        return 1
+    fi
+}
+
+last-boot-ram-issues() {
+    if command -v journalctl >/dev/null 2>&1; then
+        local output
+        output="$(journalctl -b -1 --no-pager | grep -Ei 'out of memory|oom|killed process|memory cgroup|invoked oom-killer' | tail -100)"
+        if [ -n "$output" ]; then
+            echo "$output"
+        else
+            echo "No RAM/OOM related journal entries found for the previous boot."
+            echo "Check available boots with: journalctl --list-boots"
+        fi
+    else
+        echo "journalctl is not available; check /var/log/syslog* or /var/log/kern.log* manually."
+        return 1
+    fi
+}
+
+last-boot-cpu-issues() {
+    if command -v journalctl >/dev/null 2>&1; then
+        local output
+        output="$(journalctl -b -1 --no-pager | grep -Ei 'cpu|load average|soft lockup|hard lockup|hung task|watchdog' | tail -100)"
+        if [ -n "$output" ]; then
+            echo "$output"
+        else
+            echo "No CPU/load related journal entries found for the previous boot."
+            echo "Check available boots with: journalctl --list-boots"
+        fi
+    else
+        echo "journalctl is not available; check /var/log/syslog* or /var/log/kern.log* manually."
+        return 1
+    fi
+}
+
+last-boot-crash-issues() {
+    if command -v journalctl >/dev/null 2>&1; then
+        local output
+        output="$(journalctl -b -1 -p warning..alert --no-pager | tail -200)"
+        if [ -n "$output" ]; then
+            echo "$output"
+        else
+            echo "No warning/error journal entries found for the previous boot."
+            echo "Check available boots with: journalctl --list-boots"
+        fi
+    else
+        echo "journalctl is not available; check /var/log/syslog* or /var/log/kern.log* manually."
+        return 1
+    fi
+}
+
+top-dirs-5() {
+    local target="${1:-/}"
+    sudo du -xhd1 "$target" 2>/dev/null | sort -hr | head -5
+}
+
 alias osver="cat /etc/os-release && uname -a"
 alias chs="cat /etc/hosts"
 alias crl="crontab -l"
@@ -270,6 +502,52 @@ alias ht="htop"
 alias fr="free -hm"
 alias pc='proxychains'
 alias shad='eval "$(ssh-agent -s)" && ssh-add ~/.ssh/id_rsa'
+alias sshc='ssh -o ControlMaster=auto -o ControlPath=~/.ssh/cm-%r@%h:%p -o ControlPersist=10m'
+
+# TCP traceroute report via mtr (package: mtr-tiny). Usage: mttr 1.2.3.4:443 [count]
+mttr() {
+    local target="${1:-}"
+    local count="${2:-10}"
+    local host port
+
+    if ! command -v mtr >/dev/null 2>&1; then
+        echo "Error: mtr is not installed (package: mtr-tiny)."
+        echo "Install with: sudo apt install mtr-tiny   # or: sudo dnf install mtr"
+        return 1
+    fi
+
+    if [ -z "$target" ]; then
+        echo "Usage: mttr <host:port> [count]"
+        echo "Example: mttr 1.1.1.1:443"
+        echo "Example: mttr 1.1.1.1:443 5"
+        return 1
+    fi
+
+    if ! [[ "$count" =~ ^[1-9][0-9]*$ ]]; then
+        echo "Error: count must be a positive integer (got: $count)"
+        return 1
+    fi
+
+    # IPv6 bracket form: [2001:db8::1]:443
+    if [[ "$target" =~ ^\[(.+)\]:([0-9]+)$ ]]; then
+        host="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]}"
+    elif [[ "$target" =~ ^(.+):([0-9]+)$ ]]; then
+        host="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]}"
+    else
+        echo "Error: expected host:port (got: $target)"
+        echo "Usage: mttr <host:port> [count]"
+        return 1
+    fi
+
+    if [ -z "$host" ] || [ -z "$port" ]; then
+        echo "Error: could not parse host/port from: $target"
+        return 1
+    fi
+
+    mtr -TrnzP "$port" -c "$count" "$host"
+}
 
 # systemctl #########################################
 # Alias for systemctl with auto-completion
@@ -329,26 +607,70 @@ fi
 # Apply auto-completion to the alias
 complete -F _docker d
 
-# docker-compose 
+# docker-compose
 alias dc='docker compose'
-# Download and install docker-compose auto-completion
+# Fast path: source completion if already installed. Missing file is fetched
+# asynchronously so network/sudo never blocks the prompt.
 DC_AUTOBASH_COMPLETE_FILE="/etc/bash_completion.d/docker-compose"
-if [ ! -f "$DC_AUTOBASH_COMPLETE_FILE" ]; then
-    sudo curl -sL https://raw.githubusercontent.com/docker/compose/1.23.2/contrib/completion/bash/docker-compose -o "$DC_AUTOBASH_COMPLETE_FILE"
+if [ -r "$DC_AUTOBASH_COMPLETE_FILE" ]; then
+    # shellcheck disable=SC1090
+    . "$DC_AUTOBASH_COMPLETE_FILE"
+    if declare -F _docker_compose >/dev/null 2>&1; then
+        complete -F _docker_compose dc
+    fi
+elif [ ! -e "$DC_AUTOBASH_COMPLETE_FILE" ]; then
+    (
+        __dc_url="https://raw.githubusercontent.com/docker/compose/1.23.2/contrib/completion/bash/docker-compose"
+        __dc_dest="/etc/bash_completion.d/docker-compose"
+        __dc_lock="/tmp/bashrc.docker-compose.completion.lock"
+        __dc_tmp="$(mktemp 2>/dev/null)" || exit 0
+
+        trap 'rm -f "$__dc_tmp"; rmdir "$__dc_lock" 2>/dev/null' EXIT
+        mkdir "$__dc_lock" 2>/dev/null || exit 0
+        [ ! -e "$__dc_dest" ] || exit 0
+
+        if command -v curl >/dev/null 2>&1; then
+            curl -fsSL --max-time 15 "$__dc_url" -o "$__dc_tmp" || exit 0
+        elif command -v wget >/dev/null 2>&1; then
+            wget -qT 15 -O "$__dc_tmp" "$__dc_url" || exit 0
+        else
+            exit 0
+        fi
+        [ -s "$__dc_tmp" ] || exit 0
+
+        if [ -w "$(dirname "$__dc_dest")" ]; then
+            cp "$__dc_tmp" "$__dc_dest" 2>/dev/null || exit 0
+        elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+            sudo -n cp "$__dc_tmp" "$__dc_dest" 2>/dev/null || exit 0
+        else
+            exit 0
+        fi
+    ) >/dev/null 2>&1 &
+    disown "$!" 2>/dev/null || true
 fi
-# Source the docker-compose auto-completion script
-if [ -r /etc/bash_completion.d/docker-compose ]; then
-    . /etc/bash_completion.d/docker-compose
-fi
-# Apply auto-completion to the alias
-complete -F _docker_compose dc
+unset DC_AUTOBASH_COMPLETE_FILE
 
 alias dps="docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'"
+alias wdps="watch \"docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}'\""
 alias dtop='docker stats'
 alias dlf='docker logs -f'
 alias dlog='docker ps -q | xargs -L 1 -P $(docker ps | wc -l) docker logs --since 30s --follow'
 alias dim='docker images'
 alias ddf='docker system df'
+alias dprune='docker system prune -af --volumes'
+alias dex='docker exec -it'
+dsh() {
+    local container="${1:-}"
+    if [ -z "$container" ]; then
+        echo "Usage: dsh <container>"
+        return 1
+    fi
+    if docker exec "$container" bash -c 'exit 0' >/dev/null 2>&1; then
+        docker exec -it "$container" bash
+    else
+        docker exec -it "$container" sh
+    fi
+}
 alias dcps='docker compose ps -a'
 alias dctop='docker compose top'
 alias dceve='docker compose events'
@@ -356,6 +678,13 @@ alias dceve='docker compose events'
 # K8s ################################################
 alias k='kubectl'
 alias kg='kubectl get'
+
+## Context / namespace
+alias kx='kubectl config use-context'
+alias kns='kubectl config set-context --current --namespace'
+alias kctx='kubectl config current-context'
+alias kgno='kubectl get nodes -o wide'
+alias kgpw='kubectl get pods -o wide --watch'
 
 ## Pods
 alias kgpo='kubectl get pods -o wide'
@@ -371,17 +700,26 @@ alias kgd='kubectl get deploy' # deploy is the short name of the deployment
 ## Services
 alias kgs='kubectl get svc'
 
-## Create, Run, Apply, Delete
+## Create, Run, Apply, Delete, Describe
 alias kc='kubectl create'
 alias kr='kubectl run'
 alias ka='kubectl apply -f'
-alias kd='kubectl delete'
+alias kdel='kubectl delete'
+alias kdes='kubectl describe'
 
 ## Port Forwarding
 alias kpf='kubectl port-forward'
 
-## Describe
-alias kd='kubectl describe'
+# kubectl completion for alias k (when available)
+if command -v kubectl >/dev/null 2>&1; then
+    if ! declare -F __start_kubectl >/dev/null 2>&1; then
+        # shellcheck disable=SC1090
+        source <(kubectl completion bash 2>/dev/null) || true
+    fi
+    if declare -F __start_kubectl >/dev/null 2>&1; then
+        complete -o default -F __start_kubectl k
+    fi
+fi
 
 
 # User overrides — sourced last so custom aliases/functions win
