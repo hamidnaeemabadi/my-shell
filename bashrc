@@ -88,6 +88,65 @@ else
     fi
 fi
 
+# Kubernetes prompt via kube-ps1 (context + namespace).
+# https://github.com/jonmosco/kube-ps1
+# Loaded only when kubectl exists; hidden when no current-context.
+KUBE_PS1_HIDE_IF_NOCONTEXT="${KUBE_PS1_HIDE_IF_NOCONTEXT:-true}"
+
+_bashrc_load_kube_ps1() {
+    declare -F kube_ps1 >/dev/null 2>&1 && return 0
+    command -v kubectl >/dev/null 2>&1 || return 1
+
+    local candidate
+    local bashrc_dir
+    bashrc_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+
+    for candidate in \
+        "${KUBE_PS1_SH:-}" \
+        "${bashrc_dir:+$bashrc_dir/kube-ps1.sh}" \
+        /usr/share/kube-ps1/kube-ps1.sh \
+        /usr/local/share/kube-ps1/kube-ps1.sh \
+        /usr/local/opt/kube-ps1/share/kube-ps1/kube-ps1.sh \
+        /opt/homebrew/opt/kube-ps1/share/kube-ps1/kube-ps1.sh \
+        "${HOME}/.local/share/kube-ps1/kube-ps1.sh"
+    do
+        [ -n "$candidate" ] && [ -r "$candidate" ] || continue
+        # shellcheck disable=SC1090
+        . "$candidate" >/dev/null 2>&1 || continue
+        declare -F kube_ps1 >/dev/null 2>&1 && return 0
+    done
+    return 1
+}
+
+_bashrc_load_kube_ps1 || true
+
+# Async install of kube-ps1 when kubectl exists but the script is not available yet.
+if command -v kubectl >/dev/null 2>&1 && ! declare -F kube_ps1 >/dev/null 2>&1; then
+    (
+        __kube_ps1_url="https://raw.githubusercontent.com/jonmosco/kube-ps1/master/kube-ps1.sh"
+        __kube_ps1_dest="${HOME}/.local/share/kube-ps1/kube-ps1.sh"
+        __kube_ps1_lock="/tmp/bashrc.kube-ps1.lock"
+        __kube_ps1_tmp="$(mktemp 2>/dev/null)" || exit 0
+
+        trap 'rm -f "$__kube_ps1_tmp"; rmdir "$__kube_ps1_lock" 2>/dev/null' EXIT
+        mkdir "$__kube_ps1_lock" 2>/dev/null || exit 0
+        [ ! -e "$__kube_ps1_dest" ] || exit 0
+        mkdir -p "$(dirname "$__kube_ps1_dest")" 2>/dev/null || exit 0
+
+        if command -v curl >/dev/null 2>&1; then
+            curl -fsSL --max-time 15 "$__kube_ps1_url" -o "$__kube_ps1_tmp" || exit 0
+        elif command -v wget >/dev/null 2>&1; then
+            wget -qT 15 -O "$__kube_ps1_tmp" "$__kube_ps1_url" || exit 0
+        else
+            exit 0
+        fi
+        [ -s "$__kube_ps1_tmp" ] || exit 0
+        bash -n "$__kube_ps1_tmp" >/dev/null 2>&1 || exit 0
+        mv "$__kube_ps1_tmp" "$__kube_ps1_dest" 2>/dev/null || exit 0
+    ) >/dev/null 2>&1 &
+    disown "$!" 2>/dev/null || true
+fi
+
 # Track command start time for elapsed time display
 _cmd_start_time=
 _cmd_timer_active=0
@@ -99,6 +158,7 @@ function _cmd_timer_start {
     # if it matches my_prompt (our PROMPT_COMMAND function) we ignore it.
     [[ "$BASH_COMMAND" == "my_prompt"* ]] && return
     [[ "$BASH_COMMAND" == "_cmd_timer_start" ]] && return
+    [[ "$BASH_COMMAND" == "_kube_ps1_prompt_update" ]] && return
     [[ "$BASH_COMMAND" == history* ]] && return
     # Skip empty or whitespace-only commands
     [[ -z "${BASH_COMMAND// }" ]] && return
@@ -115,6 +175,11 @@ function my_prompt {
     # Must run first in PROMPT_COMMAND so $? is the user's last command.
     local retval=$?
     local field3='$([ \j -gt 0 ] && echo \ jobs:\j)'"$(echo \ rc:$retval)"
+
+    # Refresh kube-ps1 cache after status capture (keeps $? intact).
+    if declare -F _kube_ps1_prompt_update >/dev/null 2>&1; then
+        _kube_ps1_prompt_update >/dev/null 2>&1 || true
+    fi
 
     # Elapsed time — only shown when the user actually ran a command
     local elapsed_str=""
@@ -151,11 +216,21 @@ function my_prompt {
         git_str=" \[\033[01;32m\](${branch})\[\033[00m\]"
     fi
 
-    # Line 1: ┌──(user@host)-[path]-[time] rc jobs elapsed git
+    # Kubernetes context/namespace (kube-ps1) — only when kubectl exists and context is set
+    local kube_str=""
+    if declare -F kube_ps1 >/dev/null 2>&1 && command -v kubectl >/dev/null 2>&1; then
+        local kube_out
+        kube_out="$(kube_ps1 2>/dev/null)"
+        if [ -n "$kube_out" ] && [[ "${KUBE_PS1_CONTEXT:-}" != BINARY-N/A* ]]; then
+            kube_str=" ${kube_out}"
+        fi
+    fi
+
+    # Line 1: ┌──(user@host)-[path]-[time] rc jobs git kube elapsed
     # Line 2: └─$
     local cyan="\[\033[01;36m\]"
     local reset="\[\033[00m\]"
-    PS1="${cyan}┌──${reset}${cyan}[${user_color}\u\[\033[01;36m\]@\H${cyan}]${reset}-${cyan}[\w]${reset}-\[\033[01;35m\][\t]${reset}\[\033[00;00m\]${field3}${git_str}${elapsed_str}\n${cyan}└─${reset}${prompt_char} "
+    PS1="${cyan}┌──${reset}${cyan}[${user_color}\u\[\033[01;36m\]@\H${cyan}]${reset}-${cyan}[\w]${reset}-\[\033[01;35m\][\t]${reset}\[\033[00;00m\]${field3}${git_str}${kube_str}${elapsed_str}\n${cyan}└─${reset}${prompt_char} "
 
     # Share history across interactive terminals (after status capture).
     history -a
@@ -163,13 +238,20 @@ function my_prompt {
 }
 
 # Keep PROMPT_COMMAND idempotent because this file can be sourced more than once.
+# Also remove kube-ps1's own hook so my_prompt stays first (preserves $?).
 __bashrc_prompt_command="${PROMPT_COMMAND:-}"
+__bashrc_prompt_command="${__bashrc_prompt_command//_kube_ps1_prompt_update;/}"
+__bashrc_prompt_command="${__bashrc_prompt_command//;_kube_ps1_prompt_update/}"
+__bashrc_prompt_command="${__bashrc_prompt_command/#_kube_ps1_prompt_update/}"
+__bashrc_prompt_command="${__bashrc_prompt_command/%_kube_ps1_prompt_update/}"
 __bashrc_prompt_command="${__bashrc_prompt_command//my_prompt; /}"
 __bashrc_prompt_command="${__bashrc_prompt_command//; my_prompt/}"
 __bashrc_prompt_command="${__bashrc_prompt_command/#my_prompt/}"
 __bashrc_prompt_command="${__bashrc_prompt_command/%my_prompt/}"
 __bashrc_prompt_command="${__bashrc_prompt_command#; }"
 __bashrc_prompt_command="${__bashrc_prompt_command%; }"
+# Drop leftover no-op from kube-ps1's default PROMPT_COMMAND=...:
+[[ "$__bashrc_prompt_command" == ":" ]] && __bashrc_prompt_command=
 PROMPT_COMMAND="my_prompt${__bashrc_prompt_command:+; $__bashrc_prompt_command}"
 unset __bashrc_prompt_command
 
