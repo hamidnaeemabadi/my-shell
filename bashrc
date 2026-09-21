@@ -552,12 +552,14 @@ mttr() {
 # systemctl #########################################
 # Alias for systemctl with auto-completion
 alias sc='systemctl'
-# Load the systemctl auto-completion function
+# Load the systemctl auto-completion function (ignore I/O errors on flaky FS)
 if [ -r /usr/share/bash-completion/completions/systemctl ]; then
-    . /usr/share/bash-completion/completions/systemctl
+    # shellcheck disable=SC1091
+    . /usr/share/bash-completion/completions/systemctl >/dev/null 2>&1 || true
 fi
-# Apply auto-completion to the alias
-complete -F _systemctl sc
+if declare -F _systemctl >/dev/null 2>&1; then
+    complete -F _systemctl sc
+fi
 alias scs='systemctl status'
 alias scdr='systemctl daemon-reload'
 alias scrl='systemctl reload'
@@ -600,12 +602,14 @@ alias pms='pm2 save && pm2 startup'
 
 # docker #############################################
 alias d="docker"
-# Load the docker auto-completion function
+# Load the docker auto-completion function (ignore I/O errors on flaky FS)
 if [ -r /usr/share/bash-completion/completions/docker ]; then
-    . /usr/share/bash-completion/completions/docker
+    # shellcheck disable=SC1091
+    . /usr/share/bash-completion/completions/docker >/dev/null 2>&1 || true
 fi
-# Apply auto-completion to the alias
-complete -F _docker d
+if declare -F _docker >/dev/null 2>&1; then
+    complete -F _docker d
+fi
 
 # docker-compose
 alias dc='docker compose'
@@ -614,7 +618,7 @@ alias dc='docker compose'
 DC_AUTOBASH_COMPLETE_FILE="/etc/bash_completion.d/docker-compose"
 if [ -r "$DC_AUTOBASH_COMPLETE_FILE" ]; then
     # shellcheck disable=SC1090
-    . "$DC_AUTOBASH_COMPLETE_FILE"
+    . "$DC_AUTOBASH_COMPLETE_FILE" >/dev/null 2>&1 || true
     if declare -F _docker_compose >/dev/null 2>&1; then
         complete -F _docker_compose dc
     fi
