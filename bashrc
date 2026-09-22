@@ -15,7 +15,7 @@ esac
 
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
-HISTCONTROL=ignoreboth
+HISTCONTROL=ignoreboth:erasedups
 HISTIGNORE="ls:ll:cd:cd -:pwd:exit:clear:c:cls:history"
 
 # append to the history file, don't overwrite it
@@ -38,7 +38,9 @@ shopt -s checkwinsize
 
 # If set, the pattern "**" used in a pathname expansion context will
 # match all files and zero or more directories and subdirectories.
-#shopt -s globstar
+shopt -s globstar extglob
+# optional: set -o noclobber   # block > overwrite; use >| to force
+export TIMEFORMAT='real %3R  user %3U  sys %3S'
 
 # make less more friendly for non-text input files
 # lesspipe (Debian/Ubuntu) or lesspipe.sh (RHEL/CentOS/Fedora)
@@ -582,8 +584,13 @@ alias crl="crontab -l"
 alias cre="crontab -e"
 alias ht="htop"
 alias fr="free -hm"
+alias dfh='df -hT -x tmpfs -x devtmpfs'
+alias dfi='df -ih -x tmpfs -x devtmpfs'
+alias mounts='findmnt -D'
+alias iow='sudo iostat -xz 1'
 alias pc='proxychains'
 alias shad='eval "$(ssh-agent -s)" && ssh-add ~/.ssh/id_rsa'
+# Same ControlMaster defaults live in ~/.ssh/config (Host *), so plain ssh/scp/git get them too.
 alias sshc='ssh -o ControlMaster=auto -o ControlPath=~/.ssh/cm-%r@%h:%p -o ControlPersist=10m'
 
 # TCP traceroute report via mtr (package: mtr-tiny). Usage: mttr 1.2.3.4:443 [count]
@@ -646,12 +653,25 @@ alias scs='systemctl status'
 alias scdr='systemctl daemon-reload'
 alias scrl='systemctl reload'
 alias scrs='systemctl restart'
+alias scf='systemctl --failed'
+alias scu='systemctl list-units --type=service --state=running'
+
+# journalctl ########################################
+alias jc='journalctl'
+alias jcu='journalctl -u'
+alias jce='journalctl -xe'
+alias jcf='journalctl -f'
+alias jcerr='journalctl -p err -b'
 
 # swap
 alias swpfree="sudo swapoff -va && sudo swapon -va"
 
-# show netstat 
+# show netstat
 alias nts='ss -ntulp'
+alias listening='ss -lntup'
+port() { ss -lntup | grep -E -- "$1"; }          # port 443
+pidof-port() { ss -lntp | grep ":$1 "; }
+fuser-port() { sudo fuser -v "${1}/tcp"; }
 
 # nginx ################################################
 alias ngt='nginx -t'
@@ -792,6 +812,18 @@ alias kr='kubectl run'
 alias ka='kubectl apply -f'
 alias kdel='kubectl delete'
 alias kdes='kubectl describe'
+
+## Get / top / events
+alias kga='kubectl get all,ing,cm,secret,pvc'
+alias kgev='kubectl get events --sort-by=.lastTimestamp'
+alias ktop='kubectl top pods'
+alias ktn='kubectl top nodes'
+
+## Logs, exec, rollout
+kl()  { kubectl logs -f --tail=100 "$@"; }
+kex() { kubectl exec -it "$1" -- "${2:-bash}"; }
+kroll() { kubectl rollout restart "$@"; kubectl rollout status "$@"; }
+alias kdump='kubectl cluster-info dump --output-directory=/tmp/k8s-dump'
 
 ## Port Forwarding
 alias kpf='kubectl port-forward'

@@ -54,6 +54,9 @@ set softtabstop=4       " Number of spaces removed when pressing backspace
 set autoindent          " Copy indentation from the current line
 set smartindent         " Automatically add indentation after blocks (e.g. '{')
 
+" YAML uses 2-space indent
+autocmd FileType yaml,yml setlocal shiftwidth=2 tabstop=2
+
 
 """" ========================
 """" Search Settings
@@ -61,6 +64,8 @@ set smartindent         " Automatically add indentation after blocks (e.g. '{')
 
 set incsearch           " Show search matches as you type
 set hlsearch            " Highlight all search matches
+set ignorecase          " Case-insensitive search
+set smartcase           " Override ignorecase if the pattern contains uppercase
 
 
 """" ========================
@@ -79,3 +84,6 @@ set background=dark     " Optimize colors for dark terminal backgrounds
 
 set updatetime=300      " Faster CursorHold events (useful for LSP, git signs)
 set signcolumn=yes      " Always show sign column (prevents text shifting)
+
+set undofile            " Persist undo history across sessions
+set undodir=~/.vim/undo " Store undo files in ~/.vim/undo

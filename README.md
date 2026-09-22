@@ -22,6 +22,7 @@ The installer backs up any existing files to `~/.my-shell-backups/<timestamp>/`,
 - `~/.tmux.conf`
 - `~/.config/htop/htoprc`
 - `~/.local/share/kube-ps1/kube-ps1.sh`
+- SSH defaults merged into `~/.ssh/config` (existing Host entries are kept)
 - tmux plugin manager (`~/.tmux/plugins/tpm`) if `git` is available
 
 Restore a previous file from the backup directory, for example:

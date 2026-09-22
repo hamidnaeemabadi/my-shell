@@ -92,6 +92,66 @@ install_file() {
     ok "installed ${dest}"
 }
 
+# Merge SSH defaults into ~/.ssh/config without wiping Host/ProxyJump entries.
+# Managed block is between "# BEGIN my-shell" and "# END my-shell", appended last
+# so first-match ssh_config rules still prefer earlier host-specific options.
+install_ssh_config() {
+    local dest="${HOME}/.ssh/config"
+    local name="ssh_config"
+    local begin="# BEGIN my-shell"
+    local end="# END my-shell"
+    local src_tmp out_tmp
+
+    mkdir -p "${HOME}/.ssh"
+    chmod 700 "${HOME}/.ssh"
+
+    src_tmp="$(mktemp)"
+    out_tmp="$(mktemp)"
+    trap 'rm -f "$src_tmp" "$out_tmp"' RETURN
+
+    if is_local && [ -f "${SCRIPT_DIR}/${name}" ]; then
+        cp -a "${SCRIPT_DIR}/${name}" "$src_tmp"
+    else
+        download "${REPO_RAW}/${name}" "$src_tmp"
+    fi
+
+    if [ ! -e "$dest" ] && [ ! -L "$dest" ]; then
+        cat "$src_tmp" > "$dest"
+        chmod 600 "$dest"
+        trap - RETURN
+        rm -f "$src_tmp" "$out_tmp"
+        ok "installed ${dest}"
+        return 0
+    fi
+
+    backup_if_exists "$dest"
+
+    if grep -Fxq "$begin" "$dest" && grep -Fxq "$end" "$dest"; then
+        awk -v b="$begin" -v e="$end" '
+            $0 == b { skip=1; next }
+            skip && $0 == e { skip=0; next }
+            !skip { print }
+        ' "$dest" > "$out_tmp"
+    else
+        cat "$dest" > "$out_tmp"
+    fi
+
+    if [ -s "$out_tmp" ]; then
+        # Ensure a blank line between existing config and the managed block.
+        if [ "$(tail -c 1 "$out_tmp" | wc -l)" -eq 0 ]; then
+            printf '\n' >> "$out_tmp"
+        fi
+        printf '\n' >> "$out_tmp"
+    fi
+    cat "$src_tmp" >> "$out_tmp"
+
+    mv "$out_tmp" "$dest"
+    chmod 600 "$dest"
+    trap - RETURN
+    rm -f "$src_tmp"
+    ok "merged SSH defaults into ${dest}"
+}
+
 install_tpm() {
     local dest="${HOME}/.tmux/plugins/tpm"
 
@@ -125,6 +185,7 @@ install_file vimrc "${HOME}/.vimrc"
 install_file tmux.conf "${HOME}/.tmux.conf"
 install_file htoprc "${HOME}/.config/htop/htoprc"
 install_file kube-ps1.sh "${HOME}/.local/share/kube-ps1/kube-ps1.sh"
+install_ssh_config
 install_tpm
 
 printf '\n'

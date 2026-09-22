@@ -1,0 +1,11 @@
+# BEGIN my-shell
+# SSH defaults for all hosts (including ProxyJump).
+# Keep this Host * last: ssh uses the first obtained value per option.
+Host *
+  ControlMaster auto
+  ControlPath ~/.ssh/cm-%r@%h:%p
+  ControlPersist 10m
+  ServerAliveInterval 30
+  ServerAliveCountMax 3
+  HashKnownHosts yes
+# END my-shell
