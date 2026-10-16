@@ -10,11 +10,60 @@
 export VISUAL="${VISUAL:-vim}"
 export EDITOR="${EDITOR:-vim}"
 
-# ls / navigation
-alias ll="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
-alias l="ls -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' --color=auto"
-alias lper="stat -c '%a %n' *"
-alias la='ls -A'
+# ls / navigation — prefer GNU ls (gls / coreutils / Linux); BSD-safe flags on macOS stock ls.
+# GNU-only: --group-directories-first, --time-style, -X (sort by ext). BSD -X means something else.
+_MY_SHELL_LS=""
+_MY_SHELL_LS_GNU=0
+if command -v gls >/dev/null 2>&1; then
+    _MY_SHELL_LS="$(command -v gls)"
+    _MY_SHELL_LS_GNU=1
+elif command ls --version >/dev/null 2>&1; then
+    _MY_SHELL_LS="ls"
+    _MY_SHELL_LS_GNU=1
+else
+    for _my_shell_gnu_ls in \
+        /opt/homebrew/opt/coreutils/libexec/gnubin/ls \
+        /usr/local/opt/coreutils/libexec/gnubin/ls
+    do
+        if [ -x "$_my_shell_gnu_ls" ]; then
+            _MY_SHELL_LS="$_my_shell_gnu_ls"
+            _MY_SHELL_LS_GNU=1
+            break
+        fi
+    done
+fi
+unset _my_shell_gnu_ls
+
+_MY_SHELL_LS_COLOR=""
+if [ "$_MY_SHELL_LS_GNU" = 1 ]; then
+    _MY_SHELL_LS_COLOR="--color=auto"
+elif command ls --color=never / >/dev/null 2>&1; then
+    _MY_SHELL_LS_COLOR="--color=auto"
+elif command ls -G / >/dev/null 2>&1; then
+    _MY_SHELL_LS_COLOR="-G"
+fi
+
+if [ "$_MY_SHELL_LS_GNU" = 1 ]; then
+    [ -n "$_MY_SHELL_LS" ] && [ "$_MY_SHELL_LS" != "ls" ] && alias ls="${_MY_SHELL_LS} ${_MY_SHELL_LS_COLOR}"
+    alias ll="${_MY_SHELL_LS} -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' ${_MY_SHELL_LS_COLOR}"
+    alias l="${_MY_SHELL_LS} -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' ${_MY_SHELL_LS_COLOR}"
+    alias la="${_MY_SHELL_LS} -A ${_MY_SHELL_LS_COLOR}"
+else
+    # BSD ls: -D for timestamp format; no group-directories-first; omit -X (not GNU sort-by-ext).
+    alias ll="ls -larthS -D '%Y-%m-%d %H:%M:%S' ${_MY_SHELL_LS_COLOR}"
+    alias l="ls -larthS -D '%Y-%m-%d %H:%M:%S' ${_MY_SHELL_LS_COLOR}"
+    alias la="ls -A ${_MY_SHELL_LS_COLOR}"
+fi
+
+# permissions listing (GNU stat -c vs BSD stat -f)
+if command -v gstat >/dev/null 2>&1; then
+    alias lper="gstat -c '%a %n' *"
+elif command stat -c '%a' . >/dev/null 2>&1; then
+    alias lper="stat -c '%a %n' *"
+else
+    alias lper="stat -f '%A %N' *"
+fi
+
 alias ..="cd .."
 alias cd..="cd .."
 alias ...="cd ../.."
@@ -25,7 +74,14 @@ alias cde='cd /etc'
 
 # Run ls after cd (bash/zsh both support builtin cd).
 cd() {
-    builtin cd "$@" && ls -larth --group-directories-first
+    builtin cd "$@" || return
+    if [ "${_MY_SHELL_LS_GNU:-0}" = 1 ]; then
+        # shellcheck disable=SC2086
+        "${_MY_SHELL_LS}" -larth --group-directories-first ${_MY_SHELL_LS_COLOR}
+    else
+        # shellcheck disable=SC2086
+        command ls -larth ${_MY_SHELL_LS_COLOR}
+    fi
 }
 
 mkcd() {
@@ -498,6 +554,9 @@ alias ktn='kubectl top nodes'
 alias kdump='kubectl cluster-info dump --output-directory=/tmp/k8s-dump'
 alias kpf='kubectl port-forward'
 
+# Drop plugin aliases (e.g. OMZ kubectl's `kl`) before defining functions —
+# zsh expands aliases at definition time and errors on `name()`.
+unalias kl kex kroll 2>/dev/null || true
 kl()  { kubectl logs -f --tail=100 "$@"; }
 kex() { kubectl exec -it "$1" -- "${2:-bash}"; }
 kroll() { kubectl rollout restart "$@"; kubectl rollout status "$@"; }
