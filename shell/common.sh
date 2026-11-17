@@ -43,6 +43,8 @@ elif command ls -G / >/dev/null 2>&1; then
     _MY_SHELL_LS_COLOR="-G"
 fi
 
+# Capture the detected ls command and flags when defining these aliases.
+# shellcheck disable=SC2139
 if [ "$_MY_SHELL_LS_GNU" = 1 ]; then
     [ -n "$_MY_SHELL_LS" ] && [ "$_MY_SHELL_LS" != "ls" ] && alias ls="${_MY_SHELL_LS} ${_MY_SHELL_LS_COLOR}"
     alias ll="${_MY_SHELL_LS} -larthXS --group-directories-first --time-style='+%Y-%m-%d %H:%M:%S' ${_MY_SHELL_LS_COLOR}"
@@ -85,20 +87,26 @@ cd() {
 }
 
 mkcd() {
-    mkdir -p "$1" && cd "$1"
+    mkdir -p "$1" && cd "$1" || return
 }
 
 alias where=which
 alias c='clear'
 alias cls='clear'
 alias hosts='sudo "$EDITOR" /etc/hosts'
+# The positional parameters belong to awk, not the alias.
+# shellcheck disable=SC2142
 alias lip="ip -o addr show | awk '{print \$2, \$4}'"
 alias myip='curl -s http://ip-api.com/line/"$(curl -s icanhazip.com)"'
 
 # Package managers
+# sudo invokes the external package managers, not these interactive aliases.
+# shellcheck disable=SC2032
 alias apt='sudo apt'
 alias nala='sudo nala'
+# shellcheck disable=SC2032
 alias dnf='sudo dnf'
+# shellcheck disable=SC2032
 alias yum='sudo yum'
 alias qproxy='sudo qproxy'
 
@@ -125,7 +133,7 @@ alias bcls='brew list --cask'
 alias bcse='brew search --cask'
 
 # Quick brew leave / deps helpers
-brew-deps() {
+brew_deps() {
     if ! command -v brew >/dev/null 2>&1; then
         echo "brew is not installed (https://brew.sh)"
         return 1
@@ -136,8 +144,9 @@ brew-deps() {
     fi
     brew deps --tree --installed "$1"
 }
+alias brew-deps='brew_deps'
 
-brew-uses() {
+brew_uses() {
     if ! command -v brew >/dev/null 2>&1; then
         echo "brew is not installed (https://brew.sh)"
         return 1
@@ -148,7 +157,10 @@ brew-uses() {
     fi
     brew uses --installed "$1"
 }
+alias brew-uses='brew_uses'
 
+# sudo invokes the external package managers, not their interactive aliases.
+# shellcheck disable=SC2033
 update() {
     printf 'Update packages? [y/N] '
     read -r _answer
@@ -185,7 +197,7 @@ fdns() {
     elif command -v resolvectl >/dev/null 2>&1; then
         sudo resolvectl flush-caches && sudo resolvectl statistics
     elif command -v systemd-resolve >/dev/null 2>&1; then
-        sudo systemd-resolve --flush-caches && sudo systemd-resolve --statistics
+        sudo systemd-resolve --flush-caches && sudo systemctl restart systemd-resolved&& sudo systemd-resolve --statistics
     elif command -v nscd >/dev/null 2>&1; then
         sudo nscd -i hosts
     else
@@ -194,7 +206,7 @@ fdns() {
 }
 
 # Portable DNS probe list (no bash arrays).
-dns-test() {
+dns_test() {
     domain="${1:-}"
     query_timeout=5
 
@@ -210,7 +222,7 @@ dns-test() {
 
     if [ -z "$domain" ]; then
         echo "Error: domain is required."
-        echo "Usage: dns-test <domain>"
+        echo "Usage: dns_test <domain>"
         return 1
     fi
 
@@ -264,8 +276,10 @@ dns85-2|85.15.1.15
 EOF
 }
 
+alias dns-test='dns_test'
+
 unalias random-password 2>/dev/null || true
-random-password() {
+random_password() {
     length="${1:-}"
 
     if [ -z "$length" ]; then
@@ -277,16 +291,19 @@ random-password() {
     head /dev/urandom | tr -dc 'A-Za-z0-9' | head -c "${length}"
     echo
 }
+alias random-password='random_password'
 
-top-ram-10() {
+top_ram_10() {
     ps aux --sort=-%mem | head -11
 }
+alias top-ram-10='top_ram_10'
 
-top-cpu-10() {
+top_cpu_10() {
     ps aux --sort=-%cpu | head -11
 }
+alias top-cpu-10='top_cpu_10'
 
-top-ram-10-10min() {
+top_ram_10_10min() {
     if command -v journalctl >/dev/null 2>&1; then
         output="$(journalctl --since "10 minutes ago" --no-pager | grep -Ei 'out of memory|oom|killed process|memory cgroup|invoked oom-killer|memory' | tail -100)"
         if [ -n "$output" ]; then
@@ -302,8 +319,9 @@ top-ram-10-10min() {
         return 1
     fi
 }
+alias top-ram-10-10min='top_ram_10_10min'
 
-top-cpu-10-10min() {
+top_cpu_10_10min() {
     if command -v journalctl >/dev/null 2>&1; then
         output="$(journalctl --since "10 minutes ago" --no-pager | grep -Ei 'cpu|load average|soft lockup|hard lockup|hung task|watchdog' | tail -100)"
         if [ -n "$output" ]; then
@@ -319,8 +337,9 @@ top-cpu-10-10min() {
         return 1
     fi
 }
+alias top-cpu-10-10min='top_cpu_10_10min'
 
-last-boot-ram-issues() {
+last_boot_ram_issues() {
     if command -v journalctl >/dev/null 2>&1; then
         output="$(journalctl -b -1 --no-pager | grep -Ei 'out of memory|oom|killed process|memory cgroup|invoked oom-killer' | tail -100)"
         if [ -n "$output" ]; then
@@ -334,8 +353,9 @@ last-boot-ram-issues() {
         return 1
     fi
 }
+alias last-boot-ram-issues='last_boot_ram_issues'
 
-last-boot-cpu-issues() {
+last_boot_cpu_issues() {
     if command -v journalctl >/dev/null 2>&1; then
         output="$(journalctl -b -1 --no-pager | grep -Ei 'cpu|load average|soft lockup|hard lockup|hung task|watchdog' | tail -100)"
         if [ -n "$output" ]; then
@@ -349,8 +369,9 @@ last-boot-cpu-issues() {
         return 1
     fi
 }
+alias last-boot-cpu-issues='last_boot_cpu_issues'
 
-last-boot-crash-issues() {
+last_boot_crash_issues() {
     if command -v journalctl >/dev/null 2>&1; then
         output="$(journalctl -b -1 -p warning..alert --no-pager | tail -200)"
         if [ -n "$output" ]; then
@@ -364,11 +385,13 @@ last-boot-crash-issues() {
         return 1
     fi
 }
+alias last-boot-crash-issues='last_boot_crash_issues'
 
-top-dirs-5() {
+top_dirs_5() {
     target="${1:-/}"
     sudo du -xhd1 "$target" 2>/dev/null | sort -hr | head -5
 }
+alias top-dirs-5='top_dirs_5'
 
 alias osver="cat /etc/os-release && uname -a"
 alias chs="cat /etc/hosts"
@@ -467,8 +490,10 @@ alias swpfree="sudo swapoff -va && sudo swapon -va"
 alias nts='ss -ntulp'
 alias listening='ss -lntup'
 port() { ss -lntup | grep -E -- "$1"; }
-pidof-port() { ss -lntp | grep ":$1 "; }
-fuser-port() { sudo fuser -v "${1}/tcp"; }
+pidof_port() { ss -lntp | grep ":$1 "; }
+alias pidof-port='pidof_port'
+fuser_port() { sudo fuser -v "${1}/tcp"; }
+alias fuser-port='fuser_port'
 
 # nginx
 alias ngt='nginx -t'
