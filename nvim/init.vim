@@ -52,5 +52,9 @@ set signcolumn=yes
 " Keep undo history in Neovim's default state directory.
 set undofile
 
-" Load plugins from this config's directory (also works with nvim -u).
-execute 'luafile ' . fnameescape(expand('<sfile>:p:h') . '/lua/my_shell/plugins.lua')
+" Use the installer's workstation check before loading or downloading plugins.
+let s:config_dir = expand('<sfile>:p:h')
+call system(['sh', s:config_dir . '/is-workstation.sh'])
+if v:shell_error == 0 && filereadable(s:config_dir . '/lua/my_shell/plugins.lua')
+    execute 'luafile ' . fnameescape(s:config_dir . '/lua/my_shell/plugins.lua')
+endif

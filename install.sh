@@ -299,9 +299,14 @@ install_antigen() {
 install_neovim() {
     local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
 
+    install_file "nvim/is-workstation.sh" "${config_dir}/is-workstation.sh"
     backup_if_exists "${config_dir}/init.lua"
-    install_file "nvim/lua/my_shell/plugins.lua" "${config_dir}/lua/my_shell/plugins.lua"
-    install_file "nvim/lazy-lock.json" "${config_dir}/lazy-lock.json"
+    if sh "${config_dir}/is-workstation.sh"; then
+        install_file "nvim/lua/my_shell/plugins.lua" "${config_dir}/lua/my_shell/plugins.lua"
+        install_file "nvim/lazy-lock.json" "${config_dir}/lazy-lock.json"
+    else
+        warn "Neovim plugins skipped: strict workstation checks did not pass"
+    fi
     install_file "nvim/init.vim" "${config_dir}/init.vim"
     # Neovim rejects having both init.lua and init.vim; the Lua config is backed up above.
     rm -f "${config_dir}/init.lua"

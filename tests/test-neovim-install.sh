@@ -5,6 +5,12 @@ repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 test_root="$(mktemp -d)"
 trap 'rm -rf "$test_root"' EXIT
 
+# Model macOS independently of the host running the tests.
+mkdir -p "$test_root/bin"
+printf '#!/bin/sh\nprintf "Darwin\\n"\n' > "$test_root/bin/uname"
+chmod +x "$test_root/bin/uname"
+export PATH="$test_root/bin:$PATH"
+
 # Load installer functions without running shell/plugin installation.
 sed '/^# ---- main ----/,$d' "$repo/install.sh" > "$test_root/installer-functions.sh"
 # shellcheck disable=SC1091
@@ -17,6 +23,7 @@ unset XDG_CONFIG_HOME
 
 install_neovim
 cmp "$repo/nvim/init.vim" "$HOME/.config/nvim/init.vim"
+cmp "$repo/nvim/is-workstation.sh" "$HOME/.config/nvim/is-workstation.sh"
 cmp "$repo/nvim/lua/my_shell/plugins.lua" "$HOME/.config/nvim/lua/my_shell/plugins.lua"
 cmp "$repo/nvim/lazy-lock.json" "$HOME/.config/nvim/lazy-lock.json"
 
@@ -56,8 +63,8 @@ fi
 printf 'keep lua config\n' > "$XDG_CONFIG_HOME/nvim/init.lua"
 SCRIPT_DIR=""
 download() { return 1; }
-export HOME XDG_CONFIG_HOME BACKUP_ROOT SCRIPT_DIR REPO_RAW C_GREEN C_RESET
-export -f backup_if_exists install_file install_neovim is_local download ok
+export HOME XDG_CONFIG_HOME BACKUP_ROOT SCRIPT_DIR REPO_RAW C_GREEN C_YELLOW C_RESET
+export -f backup_if_exists install_file install_neovim is_local download ok warn
 if bash -eu -c install_neovim; then
     echo 'Expected installation failure' >&2
     exit 1

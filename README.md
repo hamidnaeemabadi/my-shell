@@ -63,7 +63,7 @@ source ~/.zshrc
 
 - `~/.config/my-shell/common.sh`
 - `~/.vimrc`
-- Neovim config and plugin lockfile in `${XDG_CONFIG_HOME:-~/.config}/nvim/`
+- Basic Neovim config and workstation detector in `${XDG_CONFIG_HOME:-~/.config}/nvim/`; plugin configuration and lockfile only on verified workstations
 - `~/.tmux.conf`
 - `~/.config/htop/htoprc`
 - `~/.local/share/kube-ps1/kube-ps1.sh`
@@ -92,7 +92,24 @@ cp ~/.my-shell-backups/<timestamp>/.bashrc ~/.bashrc
 
 ## Neovim for DevOps
 
-Requires **Neovim 0.11.3+** and **Git**. On first launch, lazy.nvim downloads
+Plugins are installed and loaded **only on verified workstations**. The installer
+and Neovim startup use the same check, with no force-install override:
+
+- macOS is allowed.
+- Ubuntu requires an installed `ubuntu-desktop` or `ubuntu-desktop-minimal` package.
+- Fedora requires `VARIANT_ID=workstation` and the `fedora-release-workstation` package.
+- Both Linux cases also require a confirmed non-container environment,
+  `graphical.target` as the default systemd target, and a loaded
+  `display-manager.service`.
+- Linux servers, other distributions/desktop variants, missing evidence and
+  detection errors skip plugins. `DISPLAY` and desktop session variables do not
+  qualify a system. SSH access to a verified workstation is allowed.
+
+Basic editor settings are still installed everywhere. Existing plugin files and
+caches on excluded systems are left untouched, but this config does not load
+them or download plugins.
+
+Plugins require **Neovim 0.11.3+** and **Git**. On first launch, lazy.nvim downloads
 the plugins; internet access is needed. The included `lazy-lock.json` records
 the tested plugin versions. Use `:Lazy restore` to restore those versions or
 `:Lazy update` to update them. Re-running the installer backs up and replaces
@@ -135,7 +152,9 @@ when a parent `Chart.yaml` exists and is excluded from generic YAML linting and
 formatting. Kubernetes schemas are not forced onto every YAML file: select a
 schema matching your cluster using a YAML language-server `$schema` comment.
 
-Run `bash tests/test-neovim-install.sh` for isolated installer tests. To also
+Run `python3 tests/test-workstation.py` for the OS detection matrix and server
+startup checks, and `bash tests/test-neovim-install.sh` for isolated workstation
+installer tests. To also
 test the real plugins without downloads, set `MY_SHELL_PLUGIN_CACHE` to a
 populated lazy.nvim plugin directory (normally `~/.local/share/nvim/lazy`).
 
