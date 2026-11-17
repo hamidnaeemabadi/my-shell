@@ -10,6 +10,7 @@ my-shell/
   zshrc                  # zsh-only: Oh My Zsh + Antigen, setopt, bindkey
   themes/my-shell.zsh-theme  # zsh prompt matching bash my_prompt
   shell/common.sh        # shared aliases + portable functions
+  nvim/init.vim          # Neovim version of vimrc
   scripts/install-htop.sh
   install.sh             # detects login shell; installs matching + shared configs
 ```
@@ -62,6 +63,7 @@ source ~/.zshrc
 
 - `~/.config/my-shell/common.sh`
 - `~/.vimrc`
+- Neovim config and plugin lockfile in `${XDG_CONFIG_HOME:-~/.config}/nvim/`
 - `~/.tmux.conf`
 - `~/.config/htop/htoprc`
 - `~/.local/share/kube-ps1/kube-ps1.sh`
@@ -81,10 +83,61 @@ source ~/.zshrc
 - [Antigen](https://github.com/zsh-users/antigen) (`~/.antigen.zsh` via [git.io/antigen](https://git.io/antigen)) for third-party bundles (`zsh-autosuggestions`, `zsh-syntax-highlighting`, …)
 
 Previous files are copied to `~/.my-shell-backups/<timestamp>/` first.
+An existing Neovim `init.lua` is also backed up and removed after `init.vim` is
+installed, so Neovim loads the new configuration without a startup conflict.
 
 ```bash
 cp ~/.my-shell-backups/<timestamp>/.bashrc ~/.bashrc
 ```
+
+## Neovim for DevOps
+
+Requires **Neovim 0.11.3+** and **Git**. On first launch, lazy.nvim downloads
+the plugins; internet access is needed. The included `lazy-lock.json` records
+the tested plugin versions. Use `:Lazy restore` to restore those versions or
+`:Lazy update` to update them. Re-running the installer backs up and replaces
+the installed config and lockfile.
+
+The five configured plugins are:
+
+- [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig): Bash, YAML, Terraform, Ansible, Dockerfile and JSON language support, with native completion.
+- [nvim-lint](https://github.com/mfussenegger/nvim-lint): ShellCheck, yamllint and ansible-lint on file open and save.
+- [conform.nvim](https://github.com/stevearc/conform.nvim): manual formatting with shfmt, terraform fmt and Prettier.
+- [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim): changed-line signs, hunk previews and staging.
+- [snacks.nvim](https://github.com/folke/snacks.nvim): file search, repository search, explorer and diagnostic picker.
+
+The installer installs configuration, not external development tools. Install
+the tools you need on your PATH, then restart Neovim:
+
+- Language servers: `bash-language-server`, `yaml-language-server`, `terraform-ls`, `ansible-language-server`, `docker-langserver`, `vscode-json-language-server`.
+- Linters: `shellcheck`, `yamllint`, `ansible-lint`.
+- Formatters: `shfmt`, `terraform`, `prettier`.
+- Search: `rg` (ripgrep), and optionally `fd`.
+
+Run `:DevOpsTools` to see which executables are available. Missing tools are
+skipped; `:checkhealth vim.lsp`, `:ConformInfo` and `:checkhealth snacks` provide
+more detail. Bash and Ansible language servers delegate their standalone lint
+checks to nvim-lint to avoid duplicate diagnostics.
+
+The leader key is **Space**:
+
+- `Space ff`: find files; `Space fg`: search contents; `Space e`: explorer.
+- `Space xx`: list diagnostics; `Space d`: explain a diagnostic under the cursor.
+- `Space cf`: format the buffer or visual selection; formatting on save is disabled.
+- `Space hp`: preview a Git hunk; `Space hs`: stage a hunk; `[h` / `]h`: previous/next hunk.
+- With an attached language server: `gd`: definition; `K`: hover; `Space ca`: code action; `Space rn`: rename.
+- Native completion supports `Ctrl-x Ctrl-o`, with automatic triggering where supported by the server.
+
+YAML uses two-space indentation, including Ansible files under `playbooks/`
+and role `tasks/` and `handlers/` directories. For other Ansible layouts, use
+`:setfiletype yaml.ansible`. Chart YAML under `templates/` is detected as `helm`
+when a parent `Chart.yaml` exists and is excluded from generic YAML linting and
+formatting. Kubernetes schemas are not forced onto every YAML file: select a
+schema matching your cluster using a YAML language-server `$schema` comment.
+
+Run `bash tests/test-neovim-install.sh` for isolated installer tests. To also
+test the real plugins without downloads, set `MY_SHELL_PLUGIN_CACHE` to a
+populated lazy.nvim plugin directory (normally `~/.local/share/nvim/lazy`).
 
 ## Zsh feature mapping (no reinventing)
 

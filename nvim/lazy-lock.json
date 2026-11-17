@@ -1,0 +1,26 @@
+{
+  "conform.nvim": {
+    "branch": "master",
+    "commit": "016802de402556da54c36bd7359b441266b01cdd"
+  },
+  "gitsigns.nvim": {
+    "branch": "main",
+    "commit": "dc7698f932792a764d3db95fedee26c38e728355"
+  },
+  "lazy.nvim": {
+    "branch": "stable",
+    "commit": "85c7ff3711b730b4030d03144f6db6375044ae82"
+  },
+  "nvim-lint": {
+    "branch": "master",
+    "commit": "52107ce2076a27a285af781248e2c59bad817cd0"
+  },
+  "nvim-lspconfig": {
+    "branch": "master",
+    "commit": "e1c6a5a45d95ad22cf55c874db2ff8ab969556f0"
+  },
+  "snacks.nvim": {
+    "branch": "main",
+    "commit": "882c996cf28183f4d63640de0b4c02ec886d01f2"
+  }
+}
