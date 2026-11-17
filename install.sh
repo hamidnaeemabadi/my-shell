@@ -13,7 +13,7 @@
 #   MY_SHELL_TARGET=zsh    # zsh configs only (+ shared)
 #   MY_SHELL_TARGET=all    # bash + zsh (+ shared)
 #
-# Shared always: vimrc, tmux, htop, kube-ps1, ssh_config, shell/common.sh
+# Shared always: vimrc, Neovim, tmux, htop, kube-ps1, ssh_config, shell/common.sh
 set -euo pipefail
 
 REPO_RAW="${MY_SHELL_RAW:-https://raw.githubusercontent.com/hamidnaeemabadi/my-shell/main}"
@@ -296,10 +296,27 @@ install_antigen() {
     ok "installed antigen -> ${dest}"
 }
 
+install_neovim() {
+    local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+
+    install_file "nvim/is-workstation.sh" "${config_dir}/is-workstation.sh"
+    backup_if_exists "${config_dir}/init.lua"
+    if sh "${config_dir}/is-workstation.sh"; then
+        install_file "nvim/lua/my_shell/plugins.lua" "${config_dir}/lua/my_shell/plugins.lua"
+        install_file "nvim/lazy-lock.json" "${config_dir}/lazy-lock.json"
+    else
+        warn "Neovim plugins skipped: strict workstation checks did not pass"
+    fi
+    install_file "nvim/init.vim" "${config_dir}/init.vim"
+    # Neovim rejects having both init.lua and init.vim; the Lua config is backed up above.
+    rm -f "${config_dir}/init.lua"
+}
+
 install_shared() {
     info "Installing shared configs"
     install_file "shell/common.sh" "${HOME}/.config/my-shell/common.sh"
     install_file vimrc "${HOME}/.vimrc"
+    install_neovim
     install_file tmux.conf "${HOME}/.tmux.conf"
     install_file htoprc "${HOME}/.config/htop/htoprc"
     install_file kube-ps1.sh "${HOME}/.local/share/kube-ps1/kube-ps1.sh"
