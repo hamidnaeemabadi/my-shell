@@ -495,6 +495,35 @@ alias pidof-port='pidof_port'
 fuser_port() { sudo fuser -v "${1}/tcp"; }
 alias fuser-port='fuser_port'
 
+# Usage: kill-port <port> [tcp|udp]; omit the protocol to match both.
+kill_port() (
+    port="${1:-}"
+    protocol="${2:-}"
+    if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+        echo "Usage: kill-port <port> [tcp|udp]"
+        return 1
+    fi
+    case "$port" in
+        ''|*[!0-9]*|??????*) echo "Error: port must be an integer from 1 to 65535."; return 1 ;;
+    esac
+    if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+        echo "Error: port must be an integer from 1 to 65535."
+        return 1
+    fi
+    case "$protocol" in
+        ''|tcp|udp) ;;
+        *) echo "Error: protocol must be tcp or udp."; return 1 ;;
+    esac
+    if ! command -v lsof >/dev/null 2>&1; then
+        echo "Error: lsof is required but not installed."
+        return 1
+    fi
+    pids="$(lsof -t -nP "-i${protocol}:${port}")" || return
+    [ -n "$pids" ] || return 0
+    printf '%s\n' "$pids" | sort -u | xargs kill
+)
+alias kill-port='kill_port'
+
 # nginx
 alias ngt='nginx -t'
 alias ngr='nginx -t && systemctl reload nginx'

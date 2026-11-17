@@ -177,6 +177,18 @@ populated lazy.nvim plugin directory (normally `~/.local/share/nvim/lazy`).
 
 Aliases and helpers (`sc*`, `jc*`, `k*`, `mttr`, `port`, …) live in `shell/common.sh` and are sourced by both shells.
 
+Terminate processes matching a port with `kill-port` (requires `lsof`):
+
+```bash
+kill-port 8080       # TCP and UDP
+kill-port 8080 tcp   # TCP only
+kill-port 5353 udp   # UDP only
+```
+
+This sends SIGTERM without sudo. Like `lsof -i`, it matches listening and
+connected sockets, including connections to the selected remote port. Invalid
+ports/protocols are rejected; no signal is sent when no processes match.
+
 ## Zsh plugins with Antigen
 
 [Antigen](https://github.com/zsh-users/antigen) is installed to `~/.antigen.zsh` ([git.io/antigen](https://git.io/antigen)). Oh My Zsh still owns the `plugins=(…)` list; Antigen is for extra GitHub/OMZ bundles declared in `~/.zshrc`.
