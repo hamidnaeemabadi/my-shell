@@ -1,12 +1,11 @@
 local ok, err = pcall(function()
     assert(vim.v.errmsg == "", vim.v.errmsg)
-    local conform = require("conform")
-    local lint = require("lint")
-    require("gitsigns")
     local plugins = require("lazy.core.config").plugins
     for _, name in ipairs({ "nvim-lspconfig", "nvim-lint", "conform.nvim", "gitsigns.nvim", "snacks.nvim" }) do
         assert(plugins[name] and plugins[name]._.loaded, name .. " did not load")
     end
+    local conform = require("conform")
+    local lint = require("lint")
     assert(vim.fn.exists(":DevOpsTools") == 2)
     vim.cmd("DevOpsTools")
     assert(vim.fn.maparg("<Space>ff", "n") ~= "")

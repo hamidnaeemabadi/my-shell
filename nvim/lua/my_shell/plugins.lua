@@ -110,6 +110,7 @@ require("lazy").setup({
     },
     {
         "stevearc/conform.nvim",
+        lazy = false,
         opts = {
             formatters_by_ft = {
                 sh = { "shfmt" },
@@ -130,6 +131,7 @@ require("lazy").setup({
     },
     {
         "lewis6991/gitsigns.nvim",
+        lazy = false,
         opts = {},
         keys = {
             { "<leader>hp", "<cmd>Gitsigns preview_hunk<cr>", desc = "Preview Git hunk" },
