@@ -141,7 +141,8 @@ function _cmd_timer_start {
         _cmd_just_ran=1
     fi
 }
-trap '_cmd_timer_start' DEBUG
+# Keep the previous command's last argument available through $_.
+trap '_cmd_timer_start "$_"' DEBUG
 
 function my_prompt {
     local retval=$?
